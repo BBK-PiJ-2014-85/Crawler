@@ -71,8 +71,34 @@ public class HTMLread {
 		return Character.MIN_VALUE;
 	}
 	
+	/**
+	 * Consumes the input stream until either one of the parameters are encountered. Encounters are case sensitive. If the first parameter is 
+	 * encountered, a String containing the characters read is returned. Otherwise the null string is returned.
+	 * 
+	 * TODO: Should the last parameter found be at the end of the String? Assume not currently.
+	 * TODO: What is eof? Return null currently.
+	 * 
+	 * @param stream the input stream
+	 * @param c1 the character that, once encountered, returns the String of chars up to this point
+	 * @param c2 the character that, once encountered, returns the null string.
+	 * @return the String of chars leading up to the first parameter, or null if the second parameter was encountered.
+	 */
+	
 	public static String readString(InputStream stream, char c1, char c2)
 	{
+		String output = "";
+		int n;
+		try {
+			while ((n = stream.read()) != -1)
+			{
+				if ((char) n == c1) return output;
+				else if ((char) n  == c2) return null;
+				else output += (char) n;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
 	
@@ -93,6 +119,13 @@ public class HTMLread {
 		System.out.println("Should be b: " + HTMLread.skipSpace(in2, 'A'));
 		System.out.println("Should be c: " + HTMLread.skipSpace(in2, 'A'));
 		System.out.println("Should be null: " + HTMLread.skipSpace(in2, 'A'));
+		
+		String test3 = "This isa nothing";
+		InputStream in3 = new ByteArrayInputStream(test3.getBytes());
+		System.out.println("Should be This: " + HTMLread.readString(in3, ' ','a'));
+		System.out.println("Should be is: " + HTMLread.readString(in3, 'a','b'));
+		System.out.println("Should be null: " + HTMLread.readString(in3, 'w',' '));
+		System.out.println("Should be null: " + HTMLread.readString(in3, 'x','y'));
 		
 	}
 	
