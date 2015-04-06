@@ -16,17 +16,24 @@ import java.net.URL;
  * 		-think i will combine the temporary and final result tables to make it efficient, rather than reprint urls.
  * 			- spec say can rather than must use two tables. This code will create the temporary table, and when complete and ran search() will also contain a matched flag, which will be used to determine which are streamed on the final results table
  * 				-once complete then remove all links which are not matched.
- * 				- could jsut dump those matched underneath though, which although i don't think is any more in ethos of the coursework mathces the way of the description more. 
+ * 				- could jsut dump those matched underneath though, which although i don't think is any more in ethos of the coursework matches the way of the description more. 
  * 
- * 	- maxDepth and maxLinks set to 0 or less than one then throw exception. Otherwise, can indicate both and will stop when either is hit.
+ * 	- what about for pages not found, etc?
+ * 	- should i thread it so each crawl is off a different thread?
+
+ * 
+ * 	- if decide to set maxdepth and maxlength then 0 means no limit, otherwise must be a positive integer limit. Cannot set both to zero as this would be limitless. 
  * 
  */
 
 public class WebCrawler {
 
-	SearchCriteria matchCondition;
-	int maxLinks, maxDepth;
+	//Set default values
+	SearchCriteria matchCondition = (url) -> true;
+	int maxLinks = 20; 
+	int maxDepth = 5;
 	URL baseURL;
+	File file;
 	
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
@@ -34,26 +41,34 @@ public class WebCrawler {
 	 * 	then heading for second table MATCHED URL's, followed by those matched 
 	 */
 	
-	public WebCrawler(URL baseURL, int maxLinks, int maxDepth, File database, SearchCriteria match) throws IOException
+	
+	public WebCrawler(SearchCriteria match)
 	{
-		if (match == null) matchCondition = (url) -> true;
-		else matchCondition = match;
-		
-		if (maxLinks <= 0 && maxDepth <=0) throw new IllegalArgumentException("Both maxDepth and maxLinks are less than or equal to zero");
-		else
-		{
-			this.maxLinks = (maxLinks < 1 ? -1 : maxLinks);
-			this.maxDepth = (maxDepth < 1 ? -1 : maxDepth);
-		}
-		
-		if (database.exists()) throw new IOException("File already exists.");
-		
-		this.baseURL = baseURL;
+		matchCondition = match;
 	}
 	
-	/*
-	 * This create a separate interface called URLmatch with one method called match, returning true. This can then be set by the programmer using Lambda's at construction. Will have a default method returning true.
-	 */
+	public WebCrawler(int maxLinks, int maxDepth)
+	{
+		if (maxLinks < 0 || maxDepth < 0 || (maxDepth==0 && maxLinks==0)) throw new IllegalArgumentException("Either maxDepth or maxLinks are negative or both are set to zero");
+		this.maxLinks = maxLinks;
+		this.maxDepth = maxDepth;
+	}
+	
+	public WebCrawler(SearchCriteria match, int maxLinks, int maxDepth)
+	{
+		if (maxLinks < 0 || maxDepth < 0 || (maxDepth==0 && maxLinks==0)) throw new IllegalArgumentException("Either maxDepth or maxLinks are negative or both are set to zero");
+		this.maxLinks = maxLinks;
+		this.maxDepth = maxDepth;
+		matchCondition = match;
+	}
+	
+	public void crawl(URL url, File database)
+	{
+		
+	}
+	
+	
+
 	public boolean search(URL url)
 	{
 		return matchCondition.match(url);
