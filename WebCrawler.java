@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 // Good file to test on http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html
@@ -35,7 +36,12 @@ public class WebCrawler {
 	SearchCriteria matchCondition = (url) -> true;
 	int maxLinks = 20; 
 	int maxDepth = 5;
-	
+
+	//Crawl variables - could be put in a different class and run in threads
+	InputStream currentStream;
+	File currentDatabase;
+	int linksAdded,currentDepth;
+	boolean firstFoundOnHTML;
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
 	 * 		then a blank line
@@ -66,23 +72,22 @@ public class WebCrawler {
 	public void crawl(URL url, File database)
 	{
 
+		linksAdded=1;
+		
+		
 		try {
 			database.createNewFile();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		try {
-			InputStream stream = url.openStream();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		currentDatabase = database;
 		
 		//TODO: place any tables heading created code here
 		
-		addToTemporaryDatabase(database, url, 1);
+		addToTemporaryDatabase(url, 1);
 		
-		workNextURL(database,1);
+		workNextURL();
 		
 		clearTemporaryDatabase(database);
 		/*
@@ -107,56 +112,87 @@ public class WebCrawler {
 	//TODO: could place this within a class by itself to stop having to pass through database every time, and would be simple to follow if threading too.
 	
 	//returns true if added and therefore unique, false if not
-	private boolean addToTemporaryDatabase(File database, URL url, int depth)
+	private boolean addToTemporaryDatabase(URL url, int depth)
 	{
 		return false;
 	}
 	
-	private void workNextURL(File database, int linksAdded)
+	private void workNextURL()
 	{
 
-		int linksAddedSoFar = linksAdded; //think i can just use links added direct
-		int currentDepth = getDepthNextURLToWork(database);
-		URL url = getNextURLToWork(database);
+		int currentDepth = getDepthNextURLToWork();
+		URL url = getNextURLToWork();
 		URL urlToAdd;
 
+		//Apache URL validity checker may be useful here
+		
 		if (url != null)
 		{
-		while (currentDepth < maxDepth && linksAddedSoFar < maxLinks && (urlToAdd=getNextURLFromStream(database)) != null)
-		{
-			if (addToTemporaryDatabase(database, urlToAdd, currentDepth + 1)) linksAddedSoFar++;
+			try {
+				currentStream =  url.openStream();
+			} catch (IOException e) {
+				e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
+			}  	
+	       	       
+			while (currentDepth < maxDepth && linksAdded < maxLinks && (urlToAdd=getNextURLFromCurrentStream()) != null)
+			{
+				if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+			}
+		
+			if (search(url)) addURLToResultsDatabase(url);
+			setPriorityToZero(url);
+			workNextURL();
 		}
 		
-		if (search(url)) addURLToResultsDatabase(database,url);
-		setPriorityToZero(database, url);
-		workNextURL(database, linksAddedSoFar);
-		}
+		/*
+		 * method to get element
+		 * go to <
+		 * skip whitesapce erasing if > . store character
+		 * skip to whitespace, building string. check if it is "a" or "base"
+		 * 	- skip whitespace, to get the first char
+		 * 		- if its not an h, skip to equals, then move to next no whitesapce, then skip to end, try again to get the first char
+		 * 		- if its an h, skip to f building string, breaking with whitespace and check equals href. then skip whitespace and get an equals, then skip and take link
+		 * 
+		 * 		
+		 * 	- skip to white space mullifying it > building up string
+		 * 		-if the word if 
+		 * 
+		 * good jump to equals when hit h and see if it is href?
+		 *   
+		 * 
+		 */
+		
+		
 	}
 	
-	private int getDepthNextURLToWork(File database)
+	private int getDepthNextURLToWork()
 	{
 		return 0;
 	}
 	
 	//returns null if there are no more URLs to work
-	private URL getNextURLToWork(File database)
+	private URL getNextURLToWork()
 	{
 		return null;
 	}
 	
-	private void addURLToResultsDatabase(File database, URL url)
+	private void addURLToResultsDatabase(URL url)
 	{
 		
 	}
 	
-	private void setPriorityToZero(File database, URL url)
+	private void setPriorityToZero(URL url)
 	{
 		
 	}
 	
 	//return null if there are no urls left
-	private URL getNextURLFromStream(File database)
+	private URL getNextURLFromCurrentStream()
 	{
+		//if first hasnt been found then need to find first of base or <a href = ... or <base href = ...
+		
+		//this will need to pick up the link, and compile it using absolute, relative (checking base aswell) and root relative paths
+			// it will then check that it starts http://
 		return null;
 	}
 
@@ -170,6 +206,8 @@ public class WebCrawler {
 		
 	}
 	
+
+	
 	
 	
 	
@@ -177,17 +215,22 @@ public class WebCrawler {
 	// Temporarily seeing how the InputStreamReader works for reading in HTML from websites  
     public static void main(String[] args) throws IOException {
 
+    	
         URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
         URL test2 = new URL("http://www.w3schools.com/html/html_links.asp");
+        URL test3 = new URL("http://www.bbc.co.uk");
+        URL test4 = new URL("http://www.motive.co.nz/glossary/linking.php?ref");
+
       //  System.out.println(HTMLread.readString(test.openStream(), 'e','z'));
         
         
         BufferedReader in = new BufferedReader(
-        new InputStreamReader(test2.openStream()));  
+        new InputStreamReader(test3.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
         in.close();
+        
     }
 	
 }
