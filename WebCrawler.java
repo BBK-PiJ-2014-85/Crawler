@@ -1,5 +1,6 @@
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -17,33 +18,45 @@ import java.net.URL;
  * 				-once complete then remove all links which are not matched.
  * 				- could jsut dump those matched underneath though, which although i don't think is any more in ethos of the coursework mathces the way of the description more. 
  * 
+ * 	- maxDepth and maxLinks set to 0 or less than one then throw exception. Otherwise, can indicate both and will stop when either is hit.
+ * 
  */
 
 public class WebCrawler {
 
+	SearchCriteria matchCondition;
+	int maxLinks, maxDepth;
+	URL baseURL;
+	
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
 	 * 		then a blank line
-	 * 	then heading for second table MATCHED URL's, followed by those matched
-	 * 
-	 * 
+	 * 	then heading for second table MATCHED URL's, followed by those matched 
 	 */
 	
-	/*
-	 * Have constructor where specify database locations, search method to use, depth and breadth of crawl etc.
-	 */
-	
-	public void crawl(URL url)
+	public WebCrawler(URL baseURL, int maxLinks, int maxDepth, File database, SearchCriteria match) throws IOException
 	{
+		if (match == null) matchCondition = (url) -> true;
+		else matchCondition = match;
 		
+		if (maxLinks <= 0 && maxDepth <=0) throw new IllegalArgumentException("Both maxDepth and maxLinks are less than or equal to zero");
+		else
+		{
+			this.maxLinks = (maxLinks < 1 ? -1 : maxLinks);
+			this.maxDepth = (maxDepth < 1 ? -1 : maxDepth);
+		}
+		
+		if (database.exists()) throw new IOException("File already exists.");
+		
+		this.baseURL = baseURL;
 	}
 	
 	/*
 	 * This create a separate interface called URLmatch with one method called match, returning true. This can then be set by the programmer using Lambda's at construction. Will have a default method returning true.
 	 */
-	public boolean search()
+	public boolean search(URL url)
 	{
-		return true;
+		return matchCondition.match(url);
 	}
 	
 	
@@ -54,13 +67,15 @@ public class WebCrawler {
     public static void main(String[] args) throws IOException {
 
         URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
+        System.out.println(HTMLread.readString(test.openStream(), 'e','z'));
+        
+        /*
         BufferedReader in = new BufferedReader(
-        new InputStreamReader(test.openStream()));
-
+        new InputStreamReader(test.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
-        in.close();
+        in.close();*/
     }
 	
 }
