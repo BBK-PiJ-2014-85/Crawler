@@ -22,6 +22,7 @@ import java.net.URL;
  * 	- what about for pages not found, etc?
  * 	- should i thread it so each crawl is off a different thread?
 	-test URL is ok. What if it is not html?
+	- is ther going to be an issue opening streams of the same name
  * 
  * 	- if decide to set maxdepth and maxlength then 0 means no limit, otherwise must be a positive integer limit. Cannot set both to zero as this would be limitless. 
  * 
@@ -76,6 +77,13 @@ public class WebCrawler {
 			e.printStackTrace();
 		}
 		
+		//TODO: place any tables heading created code here
+		
+		addToTemporaryDatabase(database, url, 1);
+		
+		workNextURL(database,1);
+		
+		clearTemporaryDatabase(database);
 		/*
 		 * code structure
 		 * 
@@ -88,21 +96,77 @@ public class WebCrawler {
 		 *  				add 1 to linksAdded
 		 *  		if eof, then break
 		 *  - check if the original URL is a match, recording it if it is
+		 *  - set priority to zero in text file
 		 *  - work next link in same way
 		 *  
 		 *  Once run, stream final database effectively removing temporary database
-		 */
+		 */	
+	}
+	
+	//TODO: could place this within a class by itself to stop having to pass through database every time, and would be simple to follow if threading too.
+	
+	//returns true if added and therefore unique, false if not
+	private boolean addToTemporaryDatabase(File database, URL url, int depth)
+	{
+		return false;
+	}
+	
+	private void workNextURL(File database, int linksAdded)
+	{
+
+		int linksAddedSoFar = linksAdded; //think i can just use links added direct
+		int currentDepth = getDepthNextURLToWork(database);
+		URL url = getNextURLToWork(database);
+		URL urlToAdd;
+
+		if (url != null)
+		{
+		while (currentDepth < maxDepth && linksAddedSoFar < maxLinks && (urlToAdd=getNextURLFromStream(database)) != null)
+		{
+			if (addToTemporaryDatabase(database, urlToAdd, currentDepth + 1)) linksAddedSoFar++;
+		}
 		
-		
-		
+		if (search(url)) addURLToResultsDatabase(database,url);
+		setPriorityToZero(database, url);
+		workNextURL(database, linksAddedSoFar);
+		}
+	}
+	
+	private int getDepthNextURLToWork(File database)
+	{
+		return 0;
+	}
+	
+	//returns null if there are no more URLs to work
+	private URL getNextURLToWork(File database)
+	{
+		return null;
+	}
+	
+	private void addURLToResultsDatabase(File database, URL url)
+	{
 		
 	}
 	
+	private void setPriorityToZero(File database, URL url)
+	{
+		
+	}
 	
+	//return null if there are no urls left
+	private URL getNextURLFromStream(File database)
+	{
+		return null;
+	}
 
 	public boolean search(URL url)
 	{
 		return matchCondition.match(url);
+	}
+	
+	private void clearTemporaryDatabase(File database)
+	{
+		
 	}
 	
 	
