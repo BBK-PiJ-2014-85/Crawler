@@ -2,6 +2,7 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
@@ -20,7 +21,7 @@ import java.net.URL;
  * 
  * 	- what about for pages not found, etc?
  * 	- should i thread it so each crawl is off a different thread?
-
+	-test URL is ok. What if it is not html?
  * 
  * 	- if decide to set maxdepth and maxlength then 0 means no limit, otherwise must be a positive integer limit. Cannot set both to zero as this would be limitless. 
  * 
@@ -32,8 +33,6 @@ public class WebCrawler {
 	SearchCriteria matchCondition = (url) -> true;
 	int maxLinks = 20; 
 	int maxDepth = 5;
-	URL baseURL;
-	File file;
 	
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
@@ -64,6 +63,38 @@ public class WebCrawler {
 	
 	public void crawl(URL url, File database)
 	{
+
+		try {
+			database.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			InputStream stream = url.openStream();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		/*
+		 * code structure
+		 * 
+		 * - start of URL - get depth 
+		 *  -if depth != maxDepth and linksAdded < maxLinksAdded then getmore links loop below
+		 *  	- while (linksadded < maxLinksAdded)
+		 *  		get next link
+		 *  		check unique
+		 *  		if so, 	add to list with depth + 1
+		 *  				add 1 to linksAdded
+		 *  		if eof, then break
+		 *  - check if the original URL is a match, recording it if it is
+		 *  - work next link in same way
+		 *  
+		 *  Once run, stream final database effectively removing temporary database
+		 */
+		
+		
+		
 		
 	}
 	
