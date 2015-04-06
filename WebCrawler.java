@@ -26,6 +26,7 @@ import java.net.URL;
  * 
  * 	- if decide to set maxdepth and maxlength then 0 means no limit, otherwise must be a positive integer limit. Cannot set both to zero as this would be limitless. 
  * 
+ * -TODO: it is just http: sites that we are taking, and should we also be looking at those which are relative links as well from base?
  */
 
 public class WebCrawler {
@@ -177,15 +178,16 @@ public class WebCrawler {
     public static void main(String[] args) throws IOException {
 
         URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
-        System.out.println(HTMLread.readString(test.openStream(), 'e','z'));
+        URL test2 = new URL("http://www.w3schools.com/html/html_links.asp");
+      //  System.out.println(HTMLread.readString(test.openStream(), 'e','z'));
         
-        /*
+        
         BufferedReader in = new BufferedReader(
-        new InputStreamReader(test.openStream()));  
+        new InputStreamReader(test2.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
-        in.close();*/
+        in.close();
     }
 	
 }
