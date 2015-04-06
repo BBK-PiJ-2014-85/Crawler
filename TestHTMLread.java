@@ -13,7 +13,7 @@ public class TestHTMLread {
 	 * 	- work on empty input
 	 *  - returns false if eof
 	 * 
-	 * 
+	 * readString- case sensitive
 	 * 
 	 * 
 	 */
