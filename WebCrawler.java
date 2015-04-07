@@ -144,29 +144,33 @@ public class WebCrawler {
 			workNextURL();
 		}
 		
-		/*
-		 * method to get element
-		 * go to <
-		 * skip whitesapce erasing if > . store character
-		 * skip to whitespace, building string. check if it is "a" or "base"
-		 * 	- skip whitespace, to get the first char
-		 * 		- if its not an h, skip to equals, then move to next no whitesapce, then skip to end, try again to get the first char
-		 * 		- if its an h, skip to f building string, breaking with whitespace and check equals href. then skip whitespace and get an equals, then skip and take link
-		 * 
-		 * 		
-		 * 	- skip to white space mullifying it > building up string
-		 * 		-if the word if 
-		 * 
-		 * good jump to equals when hit h and see if it is href?
-		 *   
-		 * 
-		 */
+	/*
+	 * (Terrible.. ) Pseudocode to get Links, going by W3C standards and assuming html is accurate, otherwise you're taking a link from an erroneous site.
+	 * 
+	 * readUntil(<)
+	 * c=stream.read()
+	 * if (c.lowercase()='a') (...or (c.lowercase()='b') <= looking for base, but this case ignored in pseudocode)
+	 *  	if (c=stream.read is whitespace)
+	 * 			c=skipSpace()
+	 * 			if (next.lowercase() ='h') 
+	 * 				check next are "ref"one by one to make not case senstive href <= could be another empty element (for exmaple hidden) <= do a little loop				
+	 * 					if (c.skipSpace() = '=')
+	 * 						getPhase() <= if first (after removing whitespace) is a " returns something in "", if it is a ', returns encapsualted by '', if a char then reutrns this. 
+	 * 						link acquired and so stop.
+	 * 
+	 * 					as soon as not matched, if its whitespace at end then start again from this point, if an = or char then get next element
+	 * 			if (not h) then return next after whitespace, the close after an =, or a MIN of > is encountered go to next after whitespace or equals (stopping at > as well) (one could be an empty attribute, the other) returns >, if = retrun char, if > return minChar etc.
+					Above method is the getNextElement function
+	 * 
+	 * 		if (not whitespace) go to next < and start again
+	 */
 		
 		
 	}
 	
 	private int getDepthNextURLToWork()
 	{
+
 		return 0;
 	}
 	
