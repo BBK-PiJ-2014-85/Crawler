@@ -28,6 +28,28 @@ import java.net.URL;
  * 	- if decide to set maxdepth and maxlength then 0 means no limit, otherwise must be a positive integer limit. Cannot set both to zero as this would be limitless. 
  * 
  * -TODO: it is just http: sites that we are taking, and should we also be looking at those which are relative links as well from base?
+ * 
+ * For html, I have used the standards outlined by the worldwide web consortium:
+ * http://www.w3.org/TR/html-markup/syntax.html#syntax-elements
+ * 
+ * Namely, for elements (copied from the website referenced above):
+ * 
+    tags are used to delimit the start and end of elements in markup. Elements have a start tag to indicate where they begin. Non-void elements have an end tag to indicate where they end.
+    tag names are used within element start tags and end tags to give the element’s name. HTML elements all have names that only use characters in the range 0–9, a–z, and A–Z.
+    start tags consist of the following parts, in exactly the following order:
+       - A "<" character.
+       - The element’s tag name.
+       - Optionally, one or more attributes, each of which must be preceded by one or more space characters.
+       - Optionally, one or more space characters.
+       - Optionally, a "/" character, which may be present only if the element is a void element.
+       - A ">" character.
+    Void elements only have a start tag; end tags must not be specified for void elements.
+    The start and end tags of certain elements can be omitted. The subsection for each element in the HTML elements section of this reference provides information about which tags (if any) can be omitted for that particular element.
+    A non-void element must have an end tag, unless the subsection for that element in the HTML elements section of this reference indicates that its end tag can be omitted.
+    The contents of an element must be placed between just after its start tag (which might be implied, in certain cases) and just before its end tag (which might be implied in certain cases).
+
+ * 
+ * 
  */
 
 public class WebCrawler {
@@ -146,6 +168,8 @@ public class WebCrawler {
 		
 	/*
 	 * (Terrible.. ) Pseudocode to get Links, going by W3C standards and assuming html is accurate, otherwise you're taking a link from an erroneous site.
+	 * 
+	 * TODO: If at any point hit a <, start again (could be hitting another start, and an end tag may not have been added)
 	 * 
 	 * readUntil(<)
 	 * c=stream.read()
