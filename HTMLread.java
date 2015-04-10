@@ -73,13 +73,13 @@ public class HTMLread {
 	
 	/**
 	 * Consumes the input stream until either one of the parameters are encountered. Encounters are case sensitive. If the first parameter is 
-	 * encountered, a String containing the characters read is returned. Otherwise the null string is returned.
+	 * encountered, a String containing the characters read is returned. Otherwise the null string is returned.The parameter found
+	 * is returned at the end of the String.
 	 * 
-	 * TODO: Should the last parameter found be at the end of the String? Assume not currently.
 	 * TODO: What is eof? Return null currently.
 	 * 
 	 * @param stream the input stream
-	 * @param c1 the character that, once encountered, returns the String of chars up to this point
+	 * @param c1 the character that, once encountered, returns the String of chars up to this point, including the last parameter
 	 * @param c2 the character that, once encountered, returns the null string.
 	 * @return the String of chars leading up to the first parameter, or null if the second parameter was encountered.
 	 */
@@ -91,8 +91,38 @@ public class HTMLread {
 		try {
 			while ((n = stream.read()) != -1)
 			{
-				if ((char) n == c1) return output;
+				if ((char) n == c1) return output + (char) n;
 				else if ((char) n  == c2) return null;
+				else output += (char) n;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Consumes the input stream building a string of all values until either whitespace or the input parameter is found.
+	 * 
+	 * If whitespace is encountered first, the string of chars up to but not including the whitespace is returned.
+	 * 
+	 * If the parameter is found first, the null string is returned.
+	 * 
+	 * @param stream the input stream
+	 * @param ch the character which stops the stream being consumed and returns the null stream
+	 * @return the String of all chars encountered until the whitespace was encountered, or null if the input parameter was encountered first
+	 */
+	
+	public static String readStringuntilWhitespace(InputStream stream, char ch)
+	{
+		String output = "";
+		int n;
+		try {
+			while ((n = stream.read()) != -1)
+			{
+				if (Character.isWhitespace((char) n)) return output;
+				else if ((char) n  == ch) return null;
 				else output += (char) n;
 			}
 		} catch (IOException e) {
