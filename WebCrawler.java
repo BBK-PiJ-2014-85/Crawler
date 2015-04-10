@@ -232,37 +232,63 @@ public class WebCrawler {
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
 		while(HTMLread.readUntil(currentStream, '<', '<')) //TODO: not sure what this should stop on, it already returns false at end of file
 		{
-			n = currentStream.read();
-			if (n==-1) break;
-			char c = (char) n;
-			boolean tagIsBase = false;
-			boolean tagIsA = false;
+				n = currentStream.read();
+				if (n==-1) break;
+				char c = (char) n;
+				boolean tagIsBase = false;
+				boolean tagIsA = false;
+				boolean linkFound = false;
+				String link="";
 			
-			if (!firstTagFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag
-			{
-				if (matchStringAndMoveN("ase"))
+				if (!firstTagFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag
 				{
-					n = currentStream.read();
-					tagIsBase = Character.isWhitespace((char) n); //tag is only base
+					if (matchStringAndMoveN("ase"))
+					{
+						n = currentStream.read();
+						tagIsBase = Character.isWhitespace((char) n); //tag is only base
+					}
 				}
-			}
-			else if (Character.toLowerCase((char) n) == 'a')
-			{
-				tagIsA = Character.isWhitespace((char) n);
-			}
+				else if (Character.toLowerCase((char) n) == 'a')
+				{
+					tagIsA = Character.isWhitespace((char) n);
+				}
 			
-			if (tagIsA || tagIsBase)
-			{
-				if (!firstTagFound) firstTagFound = true;
+				if (tagIsA || tagIsBase)
+				{
+					while (n != -1 || (char) n != Character.MIN_VALUE)
+					{
+						if (!firstTagFound) firstTagFound = true;
 				
-				HTMLread.skipSpace(currentStream,'>');
+						n = HTMLread.skipSpace(currentStream,'>');
 				
-			}
+						if ((char) n == 'h')
+						{
+							if (matchStringAndMoveN("ref"))
+							{
+								n = currentStream.read();
+								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
+								{
+									if (tagIsA)
+									{
+										URL returnURL = getLink();
+										if (returnURL != null) return returnURL;
+									}
+									else if (tagIsBase)
+									{
+										
+									}
+								}
+							}
+						}
+						
+						moveToNextElement('>');
+					}
+				}
+				
+			}			
 			
-			
-			
-			
-		}
+		
+	
 		
 		//make sure break when found
 		
@@ -271,6 +297,16 @@ public class WebCrawler {
 		//this will need to pick up the link, and compile it using absolute, relative (checking base aswell) and root relative paths
 			// it will then check that it starts http://
 		return null;
+	}
+	
+	private URL getLink()
+	{
+		return null;
+	}
+	
+	private void moveToNextElement(char ch)
+	{
+		
 	}
 	
 	/*
