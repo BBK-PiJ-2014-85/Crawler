@@ -105,7 +105,7 @@ public class WebCrawler {
 		linksAdded=1;
 		currentURL = url;
 		
-		
+	/*	
 		try {
 			database.createNewFile();
 		} catch (IOException e) {
@@ -113,10 +113,11 @@ public class WebCrawler {
 		}
 		
 		currentDatabase = database;
-		
+		*/
+		//TODO: Need to ad in databases here once done
 		//TODO: place any tables heading created code here
 		
-		addToTemporaryDatabase(url, 1);
+//		addToTemporaryDatabase(url, 1);
 		
 		try {
 			workNextURL();
@@ -125,7 +126,7 @@ public class WebCrawler {
 			e.printStackTrace();
 		}
 		
-		clearTemporaryDatabase(database);
+	//	clearTemporaryDatabase(database);
 		/*
 		 * code structure
 		 * 
@@ -156,8 +157,8 @@ public class WebCrawler {
 	private void workNextURL() throws IOException
 	{
 
-		int currentDepth = getDepthNextURLToWork();
-		currentURL = getNextURLToWork();
+		//int currentDepth = getDepthNextURLToWork();
+		//currentURL = getNextURLToWork();
 		URL urlToAdd;
 
 		//Apache URL validity checker may be useful here
@@ -172,12 +173,13 @@ public class WebCrawler {
 	       	       
 			while (currentDepth < maxDepth && linksAdded < maxLinks && (urlToAdd=getNextURLFromCurrentStream()) != null)
 			{
-				if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+				System.out.println(urlToAdd);
+//				if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
 			}
 		
 			if (search(currentURL)) addURLToResultsDatabase(currentURL);
 			setPriorityToZero(currentURL);
-			workNextURL();
+	//		workNextURL(); TODO: Set this to recur when functionality added
 		}
 		
 	/*
@@ -242,7 +244,7 @@ public class WebCrawler {
 	//return null if there are no urls left
 	public URL getNextURLFromCurrentStream() throws IOException
 	{
-		System.out.println("Running get next url");
+
 		URL nextURL=null;
 		URL baseURL = currentURL;
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
@@ -255,7 +257,7 @@ public class WebCrawler {
 				boolean tagIsA = false;
 				boolean linkFound = false;
 				String link="";
-			
+				
 				if (!firstTagFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag
 				{
 					if (matchStringAndMoveN("ase"))
@@ -266,6 +268,7 @@ public class WebCrawler {
 				}
 				else if (Character.toLowerCase((char) n) == 'a')
 				{
+					n = currentStream.read();
 					tagIsA = Character.isWhitespace((char) n);
 				}
 			
@@ -282,6 +285,7 @@ public class WebCrawler {
 						{
 							if (matchStringAndMoveN("ref"))
 							{
+
 								n = currentStream.read();
 								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
 								{
@@ -331,11 +335,9 @@ public class WebCrawler {
 	private URL getLink(char ch)
 	{
 		if (n == -1 || (char) n == ch) return null;
-		
 		if ((char) n != '=') n = HTMLread.skipSpace(currentStream, ch); //move it from space to equals
 
-		if ((char) n != '=') return null;
-		
+		if ((char) n != '=') return null;	
 		n = HTMLread.skipSpace(currentStream, ch);
 		
 		String urlRaw = ((char) n == '"' || (char) n == '\'' ? "" : "" + (char) n);
@@ -345,9 +347,7 @@ public class WebCrawler {
 		else tempString = HTMLread.readStringUntilWhitespace(currentStream, ch);
 		
 		if (tempString == null) return null;
-		
 		urlRaw += tempString;
-		
 		// will need to add absolute/relative/ link to base and detect http://
 			// for now, just return whats found
 		URL rtn = null;
@@ -356,7 +356,6 @@ public class WebCrawler {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		
 		return rtn;
 	}
 	
@@ -497,8 +496,14 @@ public class WebCrawler {
     	
     	
         URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
+        URL test3 = new URL("http://www.bbc.co.uk");
         WebCrawler wc = new WebCrawler();
-        wc.getNextURLFromCurrentStream(test);
+        wc.crawl(test3,null);
+//        System.out.println(wc.getNextURLFromCurrentStream());
+//        System.out.println(wc.getNextURLFromCurrentStream());
+ //       System.out.println(wc.getNextURLFromCurrentStream());
+ //       System.out.println(wc.getNextURLFromCurrentStream());
+ //       System.out.println(wc.getNextURLFromCurrentStream());
         
         
         
