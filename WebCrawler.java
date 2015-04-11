@@ -73,7 +73,11 @@ public class WebCrawler {
 	 * 		then a blank line
 	 * 	then heading for second table MATCHED URL's, followed by those matched 
 	 */
-	
+
+	public WebCrawler()
+	{
+		
+	}
 	
 	public WebCrawler(SearchCriteria match)
 	{
@@ -224,9 +228,21 @@ public class WebCrawler {
 		
 	}
 	
-	//return null if there are no urls left
-	private URL getNextURLFromCurrentStream() throws IOException
+	public URL getNextURLFromCurrentStream(URL url) throws IOException
 	{
+		try {
+			currentStream =  url.openStream();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	return getNextURLFromCurrentStream();	
+	}
+	
+	//return null if there are no urls left
+	public URL getNextURLFromCurrentStream() throws IOException
+	{
+		System.out.println("Running get next url");
 		URL nextURL=null;
 		URL baseURL = currentURL;
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
@@ -255,7 +271,8 @@ public class WebCrawler {
 			
 				if (tagIsA || tagIsBase)
 				{
-					while (n != -1 || (char) n != Character.MIN_VALUE)
+					boolean noLinkContained=false;
+					while (n != -1 && (char) n != Character.MIN_VALUE && !noLinkContained)
 					{
 						if (!firstTagFound) firstTagFound = true;
 				
@@ -270,12 +287,13 @@ public class WebCrawler {
 								{
 									if (tagIsA)
 									{
-										URL returnURL = getLink();
+										URL returnURL = getLink('>');
 										if (returnURL != null) return returnURL;
+										else noLinkContained = true;
 									}
 									else if (tagIsBase)
 									{
-										
+										//TODO: add adding base
 									}
 								}
 							}
@@ -299,14 +317,82 @@ public class WebCrawler {
 		return null;
 	}
 	
-	private URL getLink()
+	/*
+	 * This method obtains the value for the current attribute and compiles it into a URL.
+	 * 
+	 * The point in the stream will either be at the "=" or whitespace, before the value but after the element name.
+	 * 
+	 * If the current point is whitespace, it will move to the next non whitespace which should be = (if not then null is returned).
+	 * 
+	 * From the point of equals, it moves forwards to the next no whitespace, where it will encounter an ", ' or character.
+	 * 
+	 * The URL returned is null if the input parameter is met, am end of file is met, or an '=' is not met 
+	 */
+	private URL getLink(char ch)
 	{
-		return null;
+		if (n == -1 || (char) n == ch) return null;
+		
+		if ((char) n != '=') n = HTMLread.skipSpace(currentStream, ch); //move it from space to equals
+
+		if ((char) n != '=') return null;
+		
+		n = HTMLread.skipSpace(currentStream, ch);
+		
+		String urlRaw = ((char) n == '"' || (char) n == '\'' ? "" : "" + (char) n);
+		String tempString;
+		
+		if ((char) n == '\'' || (char) n == '"') tempString = HTMLread.readString(currentStream, (char) n, ch);
+		else tempString = HTMLread.readStringUntilWhitespace(currentStream, ch);
+		
+		if (tempString == null) return null;
+		
+		urlRaw += tempString;
+		
+		// will need to add absolute/relative/ link to base and detect http://
+			// for now, just return whats found
+		URL rtn = null;
+		try {
+			rtn = new URL(urlRaw);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		return rtn;
 	}
 	
-	private void moveToNextElement(char ch)
+	private void moveToNextElement(char ch) throws IOException
 	{
 		
+		if (n != -1 && (char) n != '=')
+		{
+			if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
+			else
+			{
+				while ((char) n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+				if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
+			}
+		}
+		
+		//current point now is either eof, end of tag (>), the start of the next element (should the previous no have had an equals) of the equals
+		
+		if ((char) n == '=')
+		{
+			n = HTMLread.skipSpace(currentStream, '<');
+			
+			if (n!= -1 && (char) n != Character.MIN_VALUE)
+			{
+				if ((char) n == '"' || (char) n == '\'') 
+				{
+					if (HTMLread.readUntil(currentStream,(char) n,'>')) n = HTMLread.skipSpace(currentStream, '>');
+					else n = Character.MIN_VALUE;
+				}
+				else
+				{
+					while ((char) n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+					if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
+				}
+			}
+		}
 	}
 	
 	/*
@@ -315,7 +401,7 @@ public class WebCrawler {
 	 * point in the stream is left at the start of the next attribute. If it returns false, the input parameter was encountered
 	 * and the program stopped, or the end of the file was found.
 	 */
-	
+/*	
 	private boolean moveToNextAttribute(char ch) throws IOException
 	{
 		if (n == -1 || (char) n == ch) return false;
@@ -348,7 +434,7 @@ public class WebCrawler {
 			//if neither, then go to next whitespace
 		}
 		
-	}
+	}*/
 	
 	/* Read from the current input stream, seeing if it matches the input string (not case sensitive), returning whether it matches.
 	 * Stops cycling as soon as the match is not found, and sets the global int last read, n, to the char read in which either didnt mathc
@@ -389,7 +475,7 @@ public class WebCrawler {
 	// Temporarily seeing how the InputStreamReader works for reading in HTML from websites  
     public static void main(String[] args) throws IOException {
 
-    	String word = "hello";
+  /*  	String word = "hello";
     	while (word.length() != 0)
     	{
     		System.out.println(word.charAt(0));
@@ -404,24 +490,33 @@ public class WebCrawler {
     	System.out.println(b);
     	
     	System.out.println(Character.MIN_VALUE == b);
-    	System.out.println(Character.isWhitespace(b));
+    	System.out.println(Character.isWhitespace(b));*/
     	
-    	/*
+
+    	
+    	
+    	
         URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
-        URL test2 = new URL("http://www.w3schools.com/html/html_links.asp");
+        WebCrawler wc = new WebCrawler();
+        wc.getNextURLFromCurrentStream(test);
+        
+        
+        
+        /*URL test2 = new URL("http://www.w3schools.com/html/html_links.asp");
         URL test3 = new URL("http://www.bbc.co.uk");
         URL test4 = new URL("http://www.motive.co.nz/glossary/linking.php?ref");
 
       //  System.out.println(HTMLread.readString(test.openStream(), 'e','z'));
         
-        
+        */
+        /*
         BufferedReader in = new BufferedReader(
-        new InputStreamReader(test3.openStream()));  
+        new InputStreamReader(test.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
         in.close();
-*/        
+*/
     }
 	
 }
