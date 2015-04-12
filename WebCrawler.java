@@ -27,7 +27,7 @@ import java.net.URL;
  * 
  * 	- if decide to set maxdepth and maxlength then 0 means no limit, otherwise must be a positive integer limit. Cannot set both to zero as this would be limitless. 
  * 
- * -TODO: it is just http: sites that we are taking, and should we also be looking at those which are relative links as well from base?
+
  * TODO: Test end of files occuring at each point of the html
  * TODO: think it should actually be case sensitive
  * TODO: duplicates p[icked up when only diffference is a slash at the end
@@ -51,7 +51,9 @@ import java.net.URL;
     A non-void element must have an end tag, unless the subsection for that element in the HTML elements section of this reference indicates that its end tag can be omitted.
     The contents of an element must be placed between just after its start tag (which might be implied, in certain cases) and just before its end tag (which might be implied in certain cases).
 
- * 
+ * Usage notes:
+ * - assumed protocol included within URL, i.e. blah://
+ * - protocol should be specified in search function i.e. (url) -> url.toString().substring(0,5).equals("http:") to specfiy http: only protocol
  * 
  */
 
@@ -278,9 +280,9 @@ public class WebCrawler {
 				boolean linkFound = false;
 				String link="";
 				
-				if (!firstTagFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag
+				if (!firstTagFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag, and must be beofer an A tag
 				{
-					if (matchStringAndMoveN("ase"))
+					if (matchStringAndMoveN(false,"ase"))
 					{
 						n = currentStream.read();
 						tagIsBase = Character.isWhitespace((char) n); //tag is only base
@@ -303,22 +305,15 @@ public class WebCrawler {
 				
 						if ((char) n == 'h')
 						{
-							if (matchStringAndMoveN("ref"))
+							if (matchStringAndMoveN(true,"ref"))
 							{
-
 								n = currentStream.read();
 								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
 								{
-									if (tagIsA)
-									{
-										URL returnURL = getLink('>');
-										if (returnURL != null) return returnURL;
-										else noLinkContained = true;
-									}
-									else if (tagIsBase)
-									{
-										//TODO: add adding base
-									}
+									URL returnURL = getLink('>');
+									if (returnURL == null) noLinkContained = true;
+									else if (tagIsA) return returnURL;
+									else baseURL = trimURLToLastSlash(returnURL);
 								}
 							}
 						}
@@ -368,10 +363,6 @@ public class WebCrawler {
 		
 		if (tempString == null) return null;
 		urlRaw += tempString;
-		// will need to add absolute/relative/ link to base and detect http://
-			//if starts with /, then from domain
-			//if contains #, then same page so remove
-			// for now, just return whats found
 
 		return convertStringToURL(urlRaw);
 	}
@@ -404,7 +395,11 @@ public class WebCrawler {
 		{
 			if (stringWithoutParameters.length() > 1 && stringWithoutParameters.charAt(1) == '/')
 			{
-				linkString = "http:" + stringWithoutParameters; //assumed http protocol
+				int colonLoc = 0;
+				String current = currentURL.toString();
+				while (current.charAt(colonLoc) != ':') colonLoc++;
+
+				linkString = current.substring(0, colonLoc + 1) + stringWithoutParameters; 
 			}
 			else 
 			{
@@ -491,52 +486,12 @@ public class WebCrawler {
 		}
 	}
 	
-	/*
-	 * Moves the point in the stream to the next attribute within the element. It will be run from a point wither in the name
-	 * of the attribute, within the whitespace before the equals or at the equals sign. If it returns true, the current 
-	 * point in the stream is left at the start of the next attribute. If it returns false, the input parameter was encountered
-	 * and the program stopped, or the end of the file was found.
-	 */
-/*	
-	private boolean moveToNextAttribute(char ch) throws IOException
-	{
-		if (n == -1 || (char) n == ch) return false;
-		
-		while (!Character.isWhitespace((char) n) && (char) n != '=') //if in middle of word, move to end
-		{
-			n = currentStream.read();
-			if (n== -1 || (char) n == ch) return false;
-		}
-		//TODO: FIRST Check the logic here, and whether the skipSpace should move the counter one or check where it is
-		while (!Character.isWhitespace((char) n)) //move the next word
-		{
-			if (HTMLread.skipSpace(currentStream,ch) == Character.MIN_VALUE) return false; 
-		}
-		
-		if ((char) n == '=') //if it has hit an =, then it is in the equals part of the attribute and needs to skip through this
-		{
-			
-			if (HTMLread.skipSpace(currentStream,ch) == Character.MIN_VALUE) return false;
-			
-			if (n== -1 || (char) n == ch) return false;
-			
-			if ( (char) n == '"' || (char) n == '\'') //if it is in quotes, then go to the end quote
-			{
-				if (!HTMLread.readUntil(currentStream, (char) n, ch)) return false;
-			}
-			else 
-			//if an " then go to next "
-			// if an ' then go to next '
-			//if neither, then go to next whitespace
-		}
-		
-	}*/
 	
-	/* Read from the current input stream, seeing if it matches the input string (not case sensitive), returning whether it matches.
+	/* Read from the current input stream, seeing if it matches the input string, returning whether it matches.
 	 * Stops cycling as soon as the match is not found, and sets the global int last read, n, to the char read in which either didnt mathc
 	 * or the last char in the matched string.
 	 */
-	private boolean matchStringAndMoveN(String input) throws IOException
+	private boolean matchStringAndMoveN(boolean caseSensitive, String input) throws IOException
 	{
 		boolean matched = true;
 		String remainingWord = input;
@@ -544,7 +499,14 @@ public class WebCrawler {
 		while (matched && remainingWord.length() != 0)
 		{
 			n = currentStream.read();
-			if (Character.toLowerCase((char) n) != Character.toLowerCase(remainingWord.charAt(0))) matched=false;
+			if (caseSensitive) 
+			{
+				if ((char) n != remainingWord.charAt(0)) matched=false;
+			}
+			else
+			{
+				if (Character.toLowerCase((char) n) != Character.toLowerCase(remainingWord.charAt(0))) matched=false;
+			}
 			
 			remainingWord = remainingWord.substring(1);
 		}
@@ -593,61 +555,22 @@ public class WebCrawler {
 	
 	// Temporarily seeing how the InputStreamReader works for reading in HTML from websites  
     public static void main(String[] args) throws IOException {
-
-  /*  	String word = "hello";
-    	while (word.length() != 0)
-    	{
-    		System.out.println(word.charAt(0));
-    		word = word.substring(1);
-    	}
- 
-    	int intA = 1;
-    	int intB = -1;
-    	char a = (char) intA;
-    	char b = (char) intB;
-    	System.out.println(a);
-    	System.out.println(b);
-    	
-    	System.out.println(Character.MIN_VALUE == b);
-    	System.out.println(Character.isWhitespace(b));*/
-    	
     	
         URL test = new URL("http://www.bbc.co.uk");
         URL test3 = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
        
         
+        /*
         BufferedReader in = new BufferedReader(
         new InputStreamReader(test3.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
         in.close();
-    	
-    	
-    	
-   
-   
-        WebCrawler wc = new WebCrawler();
+    	*/
+        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"));
         wc.crawl(test3,null);
         
-        
-        
-        
-        /*URL test2 = new URL("http://www.w3schools.com/html/html_links.asp");
-        URL test3 = new URL("http://www.bbc.co.uk");
-        URL test4 = new URL("http://www.motive.co.nz/glossary/linking.php?ref");
-
-      //  System.out.println(HTMLread.readString(test.openStream(), 'e','z'));
-        
-        */
-        /*
-        BufferedReader in = new BufferedReader(
-        new InputStreamReader(test.openStream()));  
-        String inputLine;
-        while ((inputLine = in.readLine()) != null)
-            System.out.println(inputLine);
-        in.close();
-*/
     }
 	
 }
