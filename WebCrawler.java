@@ -574,13 +574,13 @@ public class WebCrawler {
 		int count = 0;
 		for (int i = 0; i<temp.length(); i++) if (temp.charAt(i) == '/') count++;
 
-		int loc = 0;
+		int loc = temp.length();
 		if (count >= 3) 
 		{
-			while (temp.charAt(temp.length() - loc) != '/') loc++;
+			while (temp.charAt(loc - 1) != '/') loc--;
 		}
 		
-		temp = temp.substring(0, temp.length() - loc);
+		temp = temp.substring(0, loc);
 		
 		URL rtn = new URL(temp);
 		
@@ -611,28 +611,25 @@ public class WebCrawler {
     	System.out.println(Character.MIN_VALUE == b);
     	System.out.println(Character.isWhitespace(b));*/
     	
-    	/*
-        URL test3 = new URL("http://www.bbc.co.uk");
+    	
+        URL test = new URL("http://www.bbc.co.uk");
+        URL test3 = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
+       
+        
         BufferedReader in = new BufferedReader(
         new InputStreamReader(test3.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
         in.close();
-    	*/
     	
     	
-        URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
-        URL test3 = new URL("http://www.bbc.co.uk");
+    	
+   
+   
         WebCrawler wc = new WebCrawler();
         wc.crawl(test3,null);
         
-        
-//        System.out.println(wc.getNextURLFromCurrentStream());
-//        System.out.println(wc.getNextURLFromCurrentStream());
- //       System.out.println(wc.getNextURLFromCurrentStream());
- //       System.out.println(wc.getNextURLFromCurrentStream());
- //       System.out.println(wc.getNextURLFromCurrentStream());
         
         
         
