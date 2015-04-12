@@ -30,6 +30,7 @@ import java.net.URL;
  * -TODO: it is just http: sites that we are taking, and should we also be looking at those which are relative links as well from base?
  * TODO: Test end of files occuring at each point of the html
  * TODO: think it should actually be case sensitive
+ * TODO: duplicates p[icked up when only diffference is a slash at the end
  * 
  * For html, I have used the standards outlined by the worldwide web consortium:
  * http://www.w3.org/TR/html-markup/syntax.html#syntax-elements
@@ -68,6 +69,9 @@ public class WebCrawler {
 	boolean firstFoundOnHTML;
 	URL currentURL;
 	int n;
+	String domainURL;
+	String baseURL;
+	
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
 	 * 		then a blank line
@@ -160,7 +164,9 @@ public class WebCrawler {
 		//int currentDepth = getDepthNextURLToWork();
 		//currentURL = getNextURLToWork();
 		URL urlToAdd;
-
+		
+		domainURL = getDomainFromURL(currentURL);
+		baseURL = currentURL.toString();
 		//Apache URL validity checker may be useful here
 		
 		if (currentURL != null)
@@ -208,6 +214,20 @@ public class WebCrawler {
 		
 	}
 	
+	private String getDomainFromURL(URL currentURL)
+	{
+		String urlString = currentURL.toString();
+		int slashCount=0;
+		int position=0;
+		while (position < urlString.length() && (slashCount < 2 || urlString.charAt(position) != '/'))
+		{
+			if (urlString.charAt(position) == '/') slashCount++;
+			position++;
+		}
+		
+		return urlString.substring(0, position);
+	}
+	
 	private int getDepthNextURLToWork()
 	{
 
@@ -246,7 +266,7 @@ public class WebCrawler {
 	{
 
 		URL nextURL=null;
-		URL baseURL = currentURL;
+		URL baseURL = trimURLToLastSlash(currentURL);
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
 		while(HTMLread.readUntil(currentStream, '<', '<')) //TODO: not sure what this should stop on, it already returns false at end of file
 		{
@@ -349,14 +369,111 @@ public class WebCrawler {
 		if (tempString == null) return null;
 		urlRaw += tempString;
 		// will need to add absolute/relative/ link to base and detect http://
+			//if starts with /, then from domain
+			//if contains #, then same page so remove
 			// for now, just return whats found
-		URL rtn = null;
+
+		return convertStringToURL(urlRaw);
+	}
+	
+	private URL convertStringToURL(String input)
+	{
+		// Standards to write this to: http://tools.ietf.org/html/rfc1808#section-5
+
+		String linkString="";
+		
+		String stringWithoutParameters ="";
+		int position=0;
+		boolean parameterFound = false;
+		while (position < input.length() && !parameterFound)
+		{
+			if (input.charAt(position) == '#' || input.charAt(position) == '?' ||input.charAt(position) == ';' ) parameterFound = true;
+			else position++;
+		 
+		}
+		
+		stringWithoutParameters = input.substring(0,position); //removing hash as this is a local reference, and ? and ; as this is for parameters to pass to the other address
+		
+		if (stringWithoutParameters.length() == 0) linkString = baseURL;
+		else if (stringWithoutParameters.contains(":")) linkString = stringWithoutParameters; //String is full reference as includes protocol
+		else if (stringWithoutParameters.substring(0,2).equals("./"))
+		{
+			linkString = baseURL + (stringWithoutParameters.length() > 2? stringWithoutParameters.substring(2) : "");
+		}
+		else if (stringWithoutParameters.charAt(0) == '/') //Link is relative to domain
+		{
+			if (stringWithoutParameters.length() > 1 && stringWithoutParameters.charAt(1) == '/')
+			{
+				linkString = "http:" + stringWithoutParameters; //assumed http protocol
+			}
+			else 
+			{
+				linkString = domainURL + stringWithoutParameters;
+			}
+		}
+		else if (stringWithoutParameters.equals(".")) linkString = baseURL;
+		else if (stringWithoutParameters.length() > 1 && stringWithoutParameters.substring(0, 2).equals(".."))
+		{
+			String testString="..";
+			int count = 0;
+			while (testString.length() <= stringWithoutParameters.length() && testString.equals(stringWithoutParameters.substring(0,testString.length())))
+			{
+				count++;
+				testString += "/..";
+			}
+			
+			int depthOfBase = -3;
+			for (int i = 0; i < baseURL.length() ; i++) if(baseURL.charAt(i) == '/') depthOfBase++;
+			
+			int numToremove = (count > depthOfBase ? depthOfBase : count);
+			
+			stringWithoutParameters = stringWithoutParameters.substring((3*count) - 1);
+			if (stringWithoutParameters.charAt(0) == '/') stringWithoutParameters = stringWithoutParameters.substring(1);
+			
+			String basePart
+			
+			linkString = moveUpXDirectories(baseURL) + ();//specifies at stadards that too many ../ then possible shoudl be added in adress 
+			
+		}
+
+		else if (..)
+		else if (../g)
+		else if (../..)
+		elser if (../../)
+		else if (../../g)
+		else (g)
+		
+		
+		else if (stringWithoutParameters.charAt(0) == '.') //Remove each ../ shortening base to domain when must stop
+		{
+			if (stringWithoutParameters.charAt(1) == '.')
+				if (stringWithoutParameters.charAt(1) == '/')
+				{
+				  //    ../        = <URL:http://a/b/>
+				}
+		}
+		// TODO: deal with ../'s which move back from base (or current location ,not sure which)
+
 		try {
-			rtn = new URL(urlRaw);
+			return new URL (linkString);
 		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return rtn;
+		
+		return null;
+		
+/*
+	      g          = <URL:http://a/b/c/g>
+
+	      ./         = <URL:http://a/b/c/>
+	      ..         = <URL:http://a/b/>
+
+	      ../g       = <URL:http://a/b/g>
+	      ../..      = <URL:http://a/>
+	      ../../     = <URL:http://a/>
+	      ../../g    = <URL:http://a/g> 
+*/
 	}
 	
 	private void moveToNextElement(char ch) throws IOException
@@ -463,9 +580,32 @@ public class WebCrawler {
 	private void clearTemporaryDatabase(File database)
 	{
 		
+		
 	}
 	
+	/*
+	 * Removes from the URL anything after the final /, so long as there are 3 already (i.e. ://.../ must remain)
+	 */
+	
+	private URL trimURLToLastSlash(URL url) throws MalformedURLException
+	{
+		String temp = url.toString();
+		
+		int count = 0;
+		for (int i = 0; i<temp.length(); i++) if (temp.charAt(i) == '/') count++;
 
+		int loc = 0;
+		if (count >= 3) 
+		{
+			while (temp.charAt(temp.length() - loc) != '/') loc++;
+		}
+		
+		temp = temp.substring(0, temp.length() - loc);
+		
+		URL rtn = new URL(temp);
+		
+		return rtn;
+	}
 	
 	
 	
@@ -491,14 +631,23 @@ public class WebCrawler {
     	System.out.println(Character.MIN_VALUE == b);
     	System.out.println(Character.isWhitespace(b));*/
     	
-
-    	
+    	/*
+        URL test3 = new URL("http://www.bbc.co.uk");
+        BufferedReader in = new BufferedReader(
+        new InputStreamReader(test3.openStream()));  
+        String inputLine;
+        while ((inputLine = in.readLine()) != null)
+            System.out.println(inputLine);
+        in.close();
+    	*/
     	
     	
         URL test = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
         URL test3 = new URL("http://www.bbc.co.uk");
         WebCrawler wc = new WebCrawler();
         wc.crawl(test3,null);
+        
+        
 //        System.out.println(wc.getNextURLFromCurrentStream());
 //        System.out.println(wc.getNextURLFromCurrentStream());
  //       System.out.println(wc.getNextURLFromCurrentStream());
