@@ -396,7 +396,7 @@ public class WebCrawler {
 		
 		if (stringWithoutParameters.length() == 0) linkString = baseURL;
 		else if (stringWithoutParameters.contains(":")) linkString = stringWithoutParameters; //String is full reference as includes protocol
-		else if (stringWithoutParameters.substring(0,2).equals("./"))
+		else if (stringWithoutParameters.length() > 1 && stringWithoutParameters.substring(0,2).equals("./"))
 		{
 			linkString = baseURL + (stringWithoutParameters.length() > 2? stringWithoutParameters.substring(2) : "");
 		}
@@ -412,47 +412,38 @@ public class WebCrawler {
 			}
 		}
 		else if (stringWithoutParameters.equals(".")) linkString = baseURL;
-		else if (stringWithoutParameters.length() > 1 && stringWithoutParameters.substring(0, 2).equals(".."))
+		else if (stringWithoutParameters.equals("..") || (stringWithoutParameters.length() > 2 && stringWithoutParameters.substring(0, 3).equals("../")))
 		{
-			String testString="..";
+			String testString="../";
 			int count = 0;
-			while (testString.length() <= stringWithoutParameters.length() && testString.equals(stringWithoutParameters.substring(0,testString.length())))
+			while ( ( (testString.length() == stringWithoutParameters.length() + 1) && stringWithoutParameters.equals(testString.substring(0, testString.length() - 1)))
+					|| testString.length() <= stringWithoutParameters.length() && testString.equals(stringWithoutParameters.substring(0,testString.length())))
 			{
 				count++;
-				testString += "/..";
+				testString += "../";
 			}
 			
 			int depthOfBase = -3;
 			for (int i = 0; i < baseURL.length() ; i++) if(baseURL.charAt(i) == '/') depthOfBase++;
 			
-			int numToremove = (count > depthOfBase ? depthOfBase : count);
+			int numToRemove = (count > depthOfBase ? depthOfBase : count);
 			
-			stringWithoutParameters = stringWithoutParameters.substring((3*count) - 1);
-			if (stringWithoutParameters.charAt(0) == '/') stringWithoutParameters = stringWithoutParameters.substring(1);
+			int basePosition = baseURL.length();
+			while (numToRemove > 0 || baseURL.charAt(basePosition - 1) != '/')
+			{
+				if (baseURL.charAt(basePosition - 1) == '/') numToRemove--;
+				basePosition--;
+			}
 			
-			String basePart
-			
-			linkString = moveUpXDirectories(baseURL) + ();//specifies at stadards that too many ../ then possible shoudl be added in adress 
-			
-		}
+			String basePart = baseURL.substring(0, basePosition);
 
-		else if (..)
-		else if (../g)
-		else if (../..)
-		elser if (../../)
-		else if (../../g)
-		else (g)
-		
-		
-		else if (stringWithoutParameters.charAt(0) == '.') //Remove each ../ shortening base to domain when must stop
-		{
-			if (stringWithoutParameters.charAt(1) == '.')
-				if (stringWithoutParameters.charAt(1) == '/')
-				{
-				  //    ../        = <URL:http://a/b/>
-				}
+			String linkPart = (stringWithoutParameters.length() < (numToRemove * 3) ? "" : stringWithoutParameters.substring(numToRemove * 3));
+			
+			linkString = basePart + linkPart;//specifies at stadards that too many ../ then possible shoudl be added in adress 
+			
 		}
-		// TODO: deal with ../'s which move back from base (or current location ,not sure which)
+		else linkString = baseURL + stringWithoutParameters;
+		
 
 		try {
 			return new URL (linkString);
@@ -463,17 +454,6 @@ public class WebCrawler {
 		
 		return null;
 		
-/*
-	      g          = <URL:http://a/b/c/g>
-
-	      ./         = <URL:http://a/b/c/>
-	      ..         = <URL:http://a/b/>
-
-	      ../g       = <URL:http://a/b/g>
-	      ../..      = <URL:http://a/>
-	      ../../     = <URL:http://a/>
-	      ../../g    = <URL:http://a/g> 
-*/
 	}
 	
 	private void moveToNextElement(char ch) throws IOException
