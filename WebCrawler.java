@@ -110,23 +110,19 @@ public class WebCrawler {
 	}
 	
 	public void crawl(URL url, File database)
-	{
-
-		linksAdded=1;
-		currentURL = url;
-		
+	{	
 		try {
 			database.createNewFile();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		currentDatabase = database;
 		
 		//TODO: Need to ad in databases here once done
 		//TODO: place any tables heading created code here
 		
-		addToTemporaryDatabase(url, 1);
+		if (addToTemporaryDatabase(url, 1)) linksAdded++;
 		
 		try {
 			workNextURL();
@@ -183,16 +179,47 @@ public class WebCrawler {
 	 * Returns the nth temporarily stored URL, or null if it doesnt exist.
 	 */
 	
-	private StoredTempURL getTempURL(int index)
+	private StoredTempURL getNextUnworkedURL()
 	{
+		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
+		{
+			String line;
+			while ((line = in.readLine()) != null && line.length() > 0 && (Character.isDigit(line.charAt(0)) || line.charAt(0)=='P')) 
+				{
+				if (Character.isDigit(line.charAt(0)) && line.charAt(0) != '0') return getURLFromString(line);
+				}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	private StoredTempURL getURLFromString(String line)
+	{
+		int numPosn = 0;
+		while(Character.isDigit(line.charAt(numPosn))) numPosn++;
+		int priority = Integer.parseInt(line.substring(0,numPosn));
+		
+		int urlStartPosn = 0;
+		while (line.charAt(urlStartPosn) != '"') urlStartPosn++;
+		try {
+			URL url = new URL(line.substring(urlStartPosn+1, line.length()-1));
+			//System.out.println(priority);
+			//System.out.println(url);
+			return new StoredTempURL(priority, url);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
 	
 	private void workNextURL() throws IOException
 	{
-
-		//int currentDepth = getDepthNextURLToWork();
-		//currentURL = getNextURLToWork();
+		StoredTempURL next = getNextUnworkedURL();
+		int currentDepth = next.priority;
+		currentURL = next.url;
 		URL urlToAdd;
 		
 		domainURL = getDomainFromURL(currentURL);
