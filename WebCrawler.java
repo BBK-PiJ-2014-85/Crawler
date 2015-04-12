@@ -1,9 +1,12 @@
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -54,6 +57,7 @@ import java.net.URL;
  * Usage notes:
  * - assumed protocol included within URL, i.e. blah://
  * - protocol should be specified in search function i.e. (url) -> url.toString().substring(0,5).equals("http:") to specfiy http: only protocol
+ * -URLs dont have whitespace or carriage returns in them
  * 
  */
 
@@ -111,7 +115,6 @@ public class WebCrawler {
 		linksAdded=1;
 		currentURL = url;
 		
-	/*	
 		try {
 			database.createNewFile();
 		} catch (IOException e) {
@@ -119,11 +122,11 @@ public class WebCrawler {
 		}
 		
 		currentDatabase = database;
-		*/
+		
 		//TODO: Need to ad in databases here once done
 		//TODO: place any tables heading created code here
 		
-//		addToTemporaryDatabase(url, 1);
+		addToTemporaryDatabase(url, 1);
 		
 		try {
 			workNextURL();
@@ -133,23 +136,7 @@ public class WebCrawler {
 		}
 		
 	//	clearTemporaryDatabase(database);
-		/*
-		 * code structure
-		 * 
-		 * - start of URL - get depth 
-		 *  -if depth != maxDepth and linksAdded < maxLinksAdded then getmore links loop below
-		 *  	- while (linksadded < maxLinksAdded)
-		 *  		get next link
-		 *  		check unique
-		 *  		if so, 	add to list with depth + 1
-		 *  				add 1 to linksAdded
-		 *  		if eof, then break
-		 *  - check if the original URL is a match, recording it if it is
-		 *  - set priority to zero in text file
-		 *  - work next link in same way
-		 *  
-		 *  Once run, stream final database effectively removing temporary database
-		 */	
+
 	}
 	
 	//TODO: could place this within a class by itself to stop having to pass through database every time, and would be simple to follow if threading too.
@@ -157,7 +144,48 @@ public class WebCrawler {
 	//returns true if added and therefore unique, false if not
 	private boolean addToTemporaryDatabase(URL url, int depth)
 	{
-		return false;
+		String tempDatabase = getAllTemporaryURLs();
+
+		tempDatabase += "\n" + depth + "\t\"" + url.toString() + "\"";
+		
+		try (PrintWriter out = new PrintWriter(currentDatabase)){
+			out.write(tempDatabase);
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return true;
+
+	}
+	
+	private String getAllTemporaryURLs()
+	{
+		String returnString="PRIORITY \tURL";
+
+		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
+		{
+			String line;
+			while ((line = in.readLine()) != null && line.length() > 0 && (Character.isDigit(line.charAt(0)) || line.charAt(0)=='P')) 
+				{
+				if (Character.isDigit(line.charAt(0))) returnString += "\n"+line;
+				}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return returnString;
+	}
+	
+	/*
+	 * Returns the nth temporarily stored URL, or null if it doesnt exist.
+	 */
+	
+	private StoredTempURL getTempURL(int index)
+	{
+		return null;
 	}
 	
 	private void workNextURL() throws IOException
@@ -182,36 +210,13 @@ public class WebCrawler {
 			while (currentDepth < maxDepth && linksAdded < maxLinks && (urlToAdd=getNextURLFromCurrentStream()) != null)
 			{
 				System.out.println(urlToAdd);
-//				if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+				if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
 			}
 		
 			if (search(currentURL)) addURLToResultsDatabase(currentURL);
 			setPriorityToZero(currentURL);
 	//		workNextURL(); TODO: Set this to recur when functionality added
 		}
-		
-	/*
-	 * (Terrible.. ) Pseudocode to get Links, going by W3C standards and assuming html is accurate, otherwise you're taking a link from an erroneous site.
-	 * 
-	 * TODO: If at any point hit a <, start again (could be hitting another start, and an end tag may not have been added)
-	 * 
-	 * readUntil(<)
-	 * c=stream.read()
-	 * if (c.lowercase()='a') (...or (c.lowercase()='b') <= looking for base, but this case ignored in pseudocode)
-	 *  	if (c=stream.read is whitespace)
-	 * 			c=skipSpace()
-	 * 			if (next.lowercase() ='h') 
-	 * 				check next are "ref"one by one to make not case senstive href <= could be another empty element (for exmaple hidden) <= do a little loop				
-	 * 					if (c.skipSpace() = '=')
-	 * 						getPhase() <= if first (after removing whitespace) is a " returns something in "", if it is a ', returns encapsualted by '', if a char then reutrns this. 
-	 * 						link acquired and so stop.
-	 * 
-	 * 					as soon as not matched, if its whitespace at end then start again from this point, if an = or char then get next element
-	 * 			if (not h) then return next after whitespace, the close after an =, or a MIN of > is encountered go to next after whitespace or equals (stopping at > as well) (one could be an empty attribute, the other) returns >, if = retrun char, if > return minChar etc.
-					Above method is the getNextElement function
-	 * 
-	 * 		if (not whitespace) go to next < and start again
-	 */
 		
 		
 	}
@@ -556,6 +561,8 @@ public class WebCrawler {
 	// Temporarily seeing how the InputStreamReader works for reading in HTML from websites  
     public static void main(String[] args) throws IOException {
     	
+    	
+    	
         URL test = new URL("http://www.bbc.co.uk");
         URL test3 = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
        
@@ -568,8 +575,13 @@ public class WebCrawler {
             System.out.println(inputLine);
         in.close();
     	*/
+        
+        File file = new File("database.txt");
+        if (file.exists()) file.delete();
+        
         WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"));
-        wc.crawl(test3,null);
+        wc.crawl(test3,file);
+        
         
     }
 	
