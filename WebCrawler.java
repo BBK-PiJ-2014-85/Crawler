@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Comparator;
 
 // Good file to test on http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html
 
@@ -77,6 +78,14 @@ public class WebCrawler {
 	int n;
 	String domainURL;
 	String baseURL;
+
+	/* Comparator below defines whether two URLs are deemed duplicate for matches. This is defined as not case sensitive, and if one ends in a forwards slash
+		and the other doesnt, but otherwise they are the same, these are determined to be the same*/
+	Comparator<String> urlMatch = (s,t) -> {
+												if (s.length() == t.length() + 1 && s.charAt(s.length() - 1) == '/') s = s.substring(0,s.length() - 1);
+												else if (t.length() == s.length() + 1 && t.charAt(t.length() - 1) == '/') t = t.substring(0,t.length() - 1);
+												if (s.equalsIgnoreCase(t)) return 0; else return 1;
+											};
 	
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
@@ -131,6 +140,8 @@ public class WebCrawler {
 			e.printStackTrace();
 		}
 		
+		System.out.println(linksAdded);
+		
 	//	clearTemporaryDatabase(database);
 
 	}
@@ -155,6 +166,45 @@ public class WebCrawler {
 		
 		return true;
 
+	}
+	
+	private void setPriorityToZero(URL url)
+	{
+		String s1 = url.toString();
+		String newOutput="";
+		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
+		{
+			boolean matched = false;
+
+			String line;
+			while ((line = in.readLine()) != null) 
+			{
+				if (line.length() == 0) newOutput += "\n";
+				else if (line.charAt(0)=='P') newOutput += line;//TODO: can make this more flexible by no longer relying on P being the first character
+				else if (!matched && Character.isDigit(line.charAt(0)))
+				{
+					String s2 = getURLFromString(line).url.toString();
+					if (urlMatch.compare(s1, s2) == 0)
+					{
+						matched = true;
+						newOutput += "\n0\t\"" + url.toString() + "\"";
+					}
+					else newOutput += "\n"+line;
+				}
+				else newOutput += "\n"+line;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try (PrintWriter out = new PrintWriter(currentDatabase)){
+			out.write(newOutput);
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private String getAllTemporaryURLs()
@@ -185,14 +235,35 @@ public class WebCrawler {
 		{
 			String line;
 			while ((line = in.readLine()) != null && line.length() > 0 && (Character.isDigit(line.charAt(0)) || line.charAt(0)=='P')) 
-				{
+			{
 				if (Character.isDigit(line.charAt(0)) && line.charAt(0) != '0') return getURLFromString(line);
-				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 		return null;
+	}
+	
+	private boolean tempURLAlreadyExist(URL url)
+	{
+		String s1 = url.toString();
+		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
+		{
+			String line;
+			while ((line = in.readLine()) != null && line.length() > 0 && (Character.isDigit(line.charAt(0)) || line.charAt(0)=='P')) 
+			{
+				if (Character.isDigit(line.charAt(0)))
+				{
+					String s2 = getURLFromString(line).url.toString();
+					if (urlMatch.compare(s1, s2) == 0) return true;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	private StoredTempURL getURLFromString(String line)
@@ -205,8 +276,6 @@ public class WebCrawler {
 		while (line.charAt(urlStartPosn) != '"') urlStartPosn++;
 		try {
 			URL url = new URL(line.substring(urlStartPosn+1, line.length()-1));
-			//System.out.println(priority);
-			//System.out.println(url);
 			return new StoredTempURL(priority, url);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -218,16 +287,18 @@ public class WebCrawler {
 	private void workNextURL() throws IOException
 	{
 		StoredTempURL next = getNextUnworkedURL();
+		
+		if (next!=null)
+		{
 		int currentDepth = next.priority;
 		currentURL = next.url;
+
 		URL urlToAdd;
 		
 		domainURL = getDomainFromURL(currentURL);
 		baseURL = currentURL.toString();
 		//Apache URL validity checker may be useful here
 		
-		if (currentURL != null)
-		{
 			try {
 				currentStream =  currentURL.openStream();
 			} catch (IOException e) {
@@ -237,7 +308,10 @@ public class WebCrawler {
 			while (currentDepth < maxDepth && linksAdded < maxLinks && (urlToAdd=getNextURLFromCurrentStream()) != null)
 			{
 				System.out.println(urlToAdd);
-				if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+				if (!tempURLAlreadyExist(urlToAdd))
+				{
+					if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+				}
 			}
 		
 			if (search(currentURL)) addURLToResultsDatabase(currentURL);
@@ -262,24 +336,7 @@ public class WebCrawler {
 		return urlString.substring(0, position);
 	}
 	
-	private int getDepthNextURLToWork()
-	{
-
-		return 0;
-	}
-	
-	//returns null if there are no more URLs to work
-	private URL getNextURLToWork()
-	{
-		return null;
-	}
-	
 	private void addURLToResultsDatabase(URL url)
-	{
-		
-	}
-	
-	private void setPriorityToZero(URL url)
 	{
 		
 	}
