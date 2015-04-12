@@ -316,7 +316,7 @@ public class WebCrawler {
 		
 			if (search(currentURL)) addURLToResultsDatabase(currentURL);
 			setPriorityToZero(currentURL);
-	//		workNextURL(); TODO: Set this to recur when functionality added
+			workNextURL(); 
 		}
 		
 		
@@ -663,7 +663,7 @@ public class WebCrawler {
         File file = new File("database.txt");
         if (file.exists()) file.delete();
         
-        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"));
+        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),3,3);
         wc.crawl(test3,file);
         
         
