@@ -60,7 +60,9 @@ import java.util.Comparator;
  * - assumed protocol included within URL, i.e. blah://
  * - protocol should be specified in search function i.e. (url) -> url.toString().substring(0,5).equals("http:") to specfiy http: only protocol
  * -URLs dont have whitespace or carriage returns in them
- * 
+ * - spec says search should be run after, and says that first link should be read via http://. 
+ * 		- if the search is run after, we will be attemptig to open lots of pages which will be refused etc. Doesn't seem as intended
+ * - possibly good to only open http:// pages, but find all links. 
  */
 
 public class WebCrawler {
@@ -139,9 +141,7 @@ public class WebCrawler {
 			e.printStackTrace();
 		}
 		
-		System.out.println(linksAdded);
-		
-	//	clearTemporaryDatabase(database);
+		clearTemporaryDatabase(database);
 
 	}
 	
@@ -152,6 +152,8 @@ public class WebCrawler {
 	{
 		String tempDatabase = getAllTemporaryURLs();
 
+		System.out.println("Adding to temporary database: " + url.toString());
+		
 		tempDatabase += "\n" + depth + "\t\"" + url.toString() + "\"\n\n";
 
 		tempDatabase += getAllMatchedURLs();
@@ -166,7 +168,6 @@ public class WebCrawler {
 		}
 		
 		return true;
-
 	}
 	
 	private void setPriorityToZero(URL url)
@@ -222,7 +223,6 @@ public class WebCrawler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		return returnString;
 	}
 	
@@ -233,15 +233,18 @@ public class WebCrawler {
 		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
 		{
 			String line;
-			while ((line = in.readLine()) != null && (line.length()==0 || line.charAt(0) == 'M'));//find either the start of MATCHED of end of file if it doesn't exist
+			while ((line = in.readLine()) != null && (line.length()==0 || line.charAt(0) != 'M'));//find either the start of MATCHED of end of file if it doesn't exist
 			if (line != null)
 			{
-				while ((line = in.readLine()) != null && line.length()>0 && line.charAt(0) == '"') returnString += "\n"+line;
+				while ((line = in.readLine()) != null && line.length()>0 && line.charAt(0) == '"') 
+				{
+					returnString += "\n"+line;
+				}
+				
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		return returnString;
 	}
 	
@@ -315,6 +318,8 @@ public class WebCrawler {
 
 		URL urlToAdd;
 		
+		System.out.println("Working: " + currentURL.toString());
+		
 		domainURL = getDomainFromURL(currentURL);
 		baseURL = currentURL.toString();
 		//Apache URL validity checker may be useful here
@@ -327,7 +332,7 @@ public class WebCrawler {
 	       	       
 			while (currentDepth < maxDepth && linksAdded < maxLinks && (urlToAdd=getNextURLFromCurrentStream()) != null)
 			{
-				System.out.println(urlToAdd);
+
 				if (!tempURLAlreadyExist(urlToAdd))
 				{
 					if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
@@ -359,6 +364,7 @@ public class WebCrawler {
 	private void addURLToMatchedDatabase(URL url)
 	{
 
+		System.out.println("Adding to matched database: " + url.toString());
 		
 		try (PrintWriter out = new PrintWriter(new FileWriter(currentDatabase,true))){
 			out.write("\n\"" + url.toString() + "\"");
@@ -640,8 +646,16 @@ public class WebCrawler {
 	
 	private void clearTemporaryDatabase(File database)
 	{
-		
-		
+		String matched = getAllMatchedURLs();
+	
+		try (PrintWriter out = new PrintWriter(currentDatabase)){
+			out.write(matched);
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/*
@@ -693,7 +707,7 @@ public class WebCrawler {
         File file = new File("database.txt");
         if (file.exists()) file.delete();
         
-        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),3,3);
+        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),30,30);
         wc.crawl(test3,file);
         
         
