@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -81,6 +82,7 @@ public class WebCrawler {
 
 	/* Comparator below defines whether two URLs are deemed duplicate for matches. This is defined as not case sensitive, and if one ends in a forwards slash
 		and the other doesnt, but otherwise they are the same, these are determined to be the same*/
+	//TODO: Do URLs have to end in a /?
 	Comparator<String> urlMatch = (s,t) -> {
 												if (s.length() == t.length() + 1 && s.charAt(s.length() - 1) == '/') s = s.substring(0,s.length() - 1);
 												else if (t.length() == s.length() + 1 && t.charAt(t.length() - 1) == '/') t = t.substring(0,t.length() - 1);
@@ -128,9 +130,6 @@ public class WebCrawler {
 
 		currentDatabase = database;
 		
-		//TODO: Need to ad in databases here once done
-		//TODO: place any tables heading created code here
-		
 		if (addToTemporaryDatabase(url, 1)) linksAdded++;
 		
 		try {
@@ -153,7 +152,9 @@ public class WebCrawler {
 	{
 		String tempDatabase = getAllTemporaryURLs();
 
-		tempDatabase += "\n" + depth + "\t\"" + url.toString() + "\"";
+		tempDatabase += "\n" + depth + "\t\"" + url.toString() + "\"\n\n";
+
+		tempDatabase += getAllMatchedURLs();
 		
 		try (PrintWriter out = new PrintWriter(currentDatabase)){
 			out.write(tempDatabase);
@@ -218,6 +219,25 @@ public class WebCrawler {
 				{
 				if (Character.isDigit(line.charAt(0))) returnString += "\n"+line;
 				}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return returnString;
+	}
+	
+	private String getAllMatchedURLs()
+	{
+		String returnString="MATCHED";
+	
+		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
+		{
+			String line;
+			while ((line = in.readLine()) != null && (line.length()==0 || line.charAt(0) == 'M'));//find either the start of MATCHED of end of file if it doesn't exist
+			if (line != null)
+			{
+				while ((line = in.readLine()) != null && line.length()>0 && line.charAt(0) == '"') returnString += "\n"+line;
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -314,7 +334,7 @@ public class WebCrawler {
 				}
 			}
 		
-			if (search(currentURL)) addURLToResultsDatabase(currentURL);
+			if (search(currentURL)) addURLToMatchedDatabase(currentURL);
 			setPriorityToZero(currentURL);
 			workNextURL(); 
 		}
@@ -336,9 +356,19 @@ public class WebCrawler {
 		return urlString.substring(0, position);
 	}
 	
-	private void addURLToResultsDatabase(URL url)
+	private void addURLToMatchedDatabase(URL url)
 	{
+
 		
+		try (PrintWriter out = new PrintWriter(new FileWriter(currentDatabase,true))){
+			out.write("\n\"" + url.toString() + "\"");
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	public URL getNextURLFromCurrentStream(URL url) throws IOException
