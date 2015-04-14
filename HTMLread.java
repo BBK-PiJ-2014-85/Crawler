@@ -74,7 +74,7 @@ public class HTMLread {
 	/**
 	 * Consumes the input stream until either one of the parameters are encountered. Encounters are case sensitive. If the first parameter is 
 	 * encountered, a String containing the characters read is returned. Otherwise the null string is returned.The parameter found
-	 * is returned at the end of the String.
+	 * is not returned at the end of the String.
 	 * 
 	 * TODO: What is eof? Return null currently.
 	 * 
@@ -91,7 +91,7 @@ public class HTMLread {
 		try {
 			while ((n = stream.read()) != -1)
 			{
-				if ((char) n == c1) return output + (char) n;
+				if ((char) n == c1) return output;
 				else if ((char) n  == c2) return null;
 				else output += (char) n;
 			}
@@ -114,7 +114,7 @@ public class HTMLread {
 	 * @return the String of all chars encountered until the whitespace was encountered, or null if the input parameter was encountered first
 	 */
 	
-	public static String readStringuntilWhitespace(InputStream stream, char ch)
+	public static String readStringUntilWhitespace(InputStream stream, char ch)
 	{
 		String output = "";
 		int n;
@@ -135,6 +135,12 @@ public class HTMLread {
 	public static void main(String[] args) throws IOException
 	{
 		//Proper tests will be written later once scopes fully understood. Below experiments to make sure id the right approach for my needs
+		
+		String testEoF = "o";
+		InputStream in4 = new ByteArrayInputStream(testEoF.getBytes());
+		System.out.println(in4.read());
+		System.out.println(in4.read());
+		System.out.println(in4.read());
 		
 		String test = "This is a string to test.";
 		InputStream in = new ByteArrayInputStream(test.getBytes());
