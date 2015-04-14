@@ -63,6 +63,16 @@ import java.util.Comparator;
  * - spec says search should be run after, and says that first link should be read via http://. 
  * 		- if the search is run after, we will be attemptig to open lots of pages which will be refused etc. Doesn't seem as intended
  * - possibly good to only open http:// pages, but find all links. 
+ * -need to note if     http://foo.com/hello world/ and http://foo.com/hello%20world are the same
+ * -Have a protocol set which set which protocols it will attempt to open
+ * - What should it do if a link doesn't exist?
+ * 		- still return it as may be indicative. program needs not to fall over.
+ * - doesn't read and obey robot.txt protocol
+ * -assume good html. Will read in if only opening tag containing href. Reads in first href per tag, even though there should be more
+ * -invalid url wont be added
+ * - when setting breadth and max links, max links includes files of a different protocol that wont be opened.
+ * - breadth and max links set to 0 will not limit by these, if setting then at least one needs to be >0
+ * - only http: read by default. Have settings within code to easilly add more to it.
  */
 
 public class WebCrawler {
