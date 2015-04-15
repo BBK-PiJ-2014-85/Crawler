@@ -34,7 +34,7 @@ public class HTMLStream {
 	
 	public static InputStream getStream(URL url) throws IOException
 	{
-		return (pages.isEmpty() ? url.openStream() : new ByteArrayInputStream(pages.get(url).getBytes()));
+		return (pages == null ? url.openStream() : new ByteArrayInputStream(pages.get(url).getBytes()));
 	}
 	
 	/**
