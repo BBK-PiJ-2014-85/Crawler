@@ -335,7 +335,7 @@ public class WebCrawler {
 		//Apache URL validity checker may be useful here
 		
 			try {
-				currentStream =  currentURL.openStream();
+				currentStream =  HTMLStream.getStream(currentURL);
 			} catch (IOException e) {
 				e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
 			}  	
@@ -390,7 +390,7 @@ public class WebCrawler {
 	public URL getNextURLFromCurrentStream(URL url) throws IOException
 	{
 		try {
-			currentStream =  url.openStream();
+			currentStream =  HTMLStream.getStream(url);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -717,7 +717,7 @@ public class WebCrawler {
         File file = new File("database.txt");
         if (file.exists()) file.delete();
         
-        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),30,30);
+        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),5,5);
         wc.crawl(test3,file);
         
         
