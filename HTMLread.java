@@ -67,7 +67,6 @@ public class HTMLread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		return Character.MIN_VALUE;
 	}
 	
