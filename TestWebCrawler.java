@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,38 +22,86 @@ public class TestWebCrawler {
 	WebCrawler wc;
 	
 	File file = new File("testDatabase.txt");
+
+	static URL simpleLinkFound;
+	static File fileSimpleLinkFound = new File("simpleLinkFound");
+	static URL simpleBaseLinkFound;
+	static URL tagBasefNotReadIn;
+	static URL tagBasNotReadIn;
+	
+	static URL littleA;
 	static File fileLittleA = new File("littleA");
-	static File fileLittleAFound = new File("littleAFound");
+
+	static URL bigA;
 	static File fileBigA = new File("bigA");
-	static File fileBigAFound = new File("bigAFound");
+	static URL multipleSpaceA;
+	static File fileMultipleSpaceA = new File("multipleSpaceA");
+	static URL tabA;
+	static File fileTabA = new File("tabA");
+	static URL multipleTabA;
+	static File fileMultipleTabA = new File("multipleTabA");
+	static URL linebreakA;
+	static File fileLinebreakA = new File("linebreakA");
+	static URL multipleLinebreakA;
+	static File fileMultipleLinebreakA = new File("multipleLinebreakA");
+	static URL whitespaceMixA;
+	static File fileWhitespaceMixA = new File("whitespaceMixA");
+	static URL tagAh;
+	static File filetagAh = new File("tagAh");
+	
+	static URL baseLower;
+	static File fileBaseLower = new File("baseLower");
+	static URL baseUpper;
+	static File fileBaseUpper = new File("baseUpper");
+	static URL baseMixedCase;
+	static File fileBaseMixedCase = new File("baseMaxedCase");
+	static URL tagBasef;
+	static File fileTagBasef = new File("tagBasef");
+	static URL tagBas;
+	static File fileTagBas = new File("TagBas");
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
-	static URL littleA;
-	static URL littleAFound;
-	static URL bigA;
-	static URL bigAFound;
+
+
+
+
 	
 	@BeforeClass
 	public static void setUp() throws IOException
 	{
-		littleA = new URL("http://littleA.com/");
-		setBody(fileLittleA,"<a href=http://littleAFound.com/>");
-		testPages.put(littleA, fileLittleA);
+		addPage(simpleLinkFound = new URL("http://simpleLinkFound"),fileSimpleLinkFound,"Link was followed");
+		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
+		testPages.put(tagBasefNotReadIn = new URL("http://basef.com/found"), fileSimpleLinkFound);
+		testPages.put(tagBasNotReadIn = new URL("http://bas.com/found"),fileSimpleLinkFound);
 		
-		littleAFound = new URL("http://littleAFound.com/");
-		setBody(fileLittleAFound,"link from little A tag page");
-		testPages.put(littleAFound, fileLittleAFound);
-		
-		bigA = new URL("http://bigA.com/");
-		setBody(fileBigA,"<A href=http://bigAFound.com/>");
-		testPages.put(bigA, fileBigA);
+		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
 
-		bigAFound = new URL("http://bigAFound.com/");
-		setBody(fileBigAFound,"link from a big A tag page");
-		testPages.put(bigA, fileBigAFound);
-		
+		addPage(bigA = new URL("http://bigA.com/"),fileBigA,"<A href=http://simpleLinkFound.com/>");
+		addPage(multipleSpaceA = new URL("http://multipleSpaceA.com/"),fileMultipleSpaceA,"<a  href=http://simpleLinkFound.com/>");
+		addPage(tabA = new URL("http://tabA.com/"),fileTabA,"<a\thref=http://simpleLinkFound.com/>");
+		addPage(multipleTabA = new URL("http://multipleTabA.com/"),fileMultipleTabA,"<a\t\thref=http://simpleLinkFound.com/>");
+		addPage(linebreakA = new URL("http://linebreakA.com/"),fileLinebreakA,"<a\nhref=http://simpleLinkFound.com/>");
+		addPage(multipleLinebreakA = new URL("http://multipleLinebreakA.com/"),fileMultipleLinebreakA,"<a\n\nhref=http://simpleLinkFound.com/>");
+		addPage(whitespaceMixA = new URL("http://whitespaceMixA.com/"),fileWhitespaceMixA,"<a\n \t \n \t  \t \n\n\nhref=http://simpleLinkFound.com/>");
+		addPage(tagAh = new URL("http://tagAH.com/"),filetagAh,"<ah href=http://simpleLinkFound.com/>");
+	
+		addPage(baseLower = new URL("http://baseLower.com/"),fileBaseLower,"<base href=http://baseLink.com/> <a href=found>");
+		addPage(baseUpper = new URL("http://baseUpper.com/"),fileBaseUpper,"<BASE href=http://baseLink.com/> <a href=found>");
+		addPage(baseMixedCase = new URL("http://baseMixedCase.com/"),fileBaseMixedCase,"<bAsE href=http://baseLink.com/> <a href=found>");
+		addPage(tagBasef = new URL("http://tagBasef.com/"),fileTagBasef,"<basef href=http://baseLink.com/> <a href=found>");
+		addPage(tagBas = new URL("http://tagBas.com"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
+	}
+	
+	@AfterClass //use this to delete fioes after test has run to avoid cluttering the program folder
+	public static void deleteFiles()
+	{
 
-
+	}
+	
+	private static void addPage(URL pageName, File pageFile, String pageContent) throws IOException
+	{
+		setBody(pageFile,pageContent);
+		testPages.put(pageName, pageFile);
 	}
 	
 	private static void setBody(File file, String body) throws IOException
@@ -81,7 +130,7 @@ public class TestWebCrawler {
 	public void testTagFoundLittleA() {
 		wc.crawl(littleA, file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertTrue(HTMLStream.getSearchedURLs().contains(littleAFound));
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 		
 	}
 	
@@ -89,8 +138,97 @@ public class TestWebCrawler {
 	public void testTagFoundBigA() {
 		wc.crawl(bigA, file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertTrue(HTMLStream.getSearchedURLs().contains(bigAFound));
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 	}
+
+	@Test
+	public void testTagFoundMultipleSpace() {
+		wc.crawl(multipleSpaceA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+	@Test
+	public void testTagTabA() {
+		wc.crawl(tabA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+	@Test
+	public void testTagFoundMultipleTabA() {
+		wc.crawl(multipleTabA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+	@Test
+	public void testTagFoundLinebreak() {
+		wc.crawl(linebreakA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+	@Test
+	public void testTagFoundMultipleLinebreak() {
+		wc.crawl(multipleLinebreakA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+	@Test
+	public void testTagFoundWhitespaceMix() {
+		wc.crawl(whitespaceMixA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+
+	@Test
+	public void testTagAH() {
+		wc.crawl(tagAh, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+	@Test
+	public void testTagBaseLower() {
+		wc.crawl(baseLower, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleBaseLinkFound));
+	}
+	
+	@Test
+	public void testTagBaseUpper() {
+		wc.crawl(baseUpper, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleBaseLinkFound));
+	}
+	
+	@Test
+	public void testTagBaseMixedCase() {
+		wc.crawl(baseMixedCase, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleBaseLinkFound));
+	}
+
+	@Test
+	public void testTagBasefNotFollowed() {
+		wc.crawl(tagBasef, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagBasefNotReadIn));
+	}
+
+	@Test
+	public void testTagBasNotFollowed() {
+		wc.crawl(tagBas, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagBasNotReadIn));
+	}
+
+	
+
+
+
 	
 	/*
 	 * Create mock class which can set webpages for it to see. I.e., have it return the stream to the WebCrawler. In live, it will use default which will access the site,
@@ -106,10 +244,8 @@ public class TestWebCrawler {
 	 * HTML READING
 	 * 
 	 * 	DETERMINE TAG READ IN PROPERLY
-	 	* a read in 
 	 	* base read in
 	 	* base not added as link
-	 	* A read in
 	 	* bAsE read in
 	 	* BaSe read in
 	 	* <ah not read in
