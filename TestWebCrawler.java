@@ -23,22 +23,36 @@ public class TestWebCrawler {
 	File file = new File("testDatabase.txt");
 	static File fileLittleA = new File("littleA");
 	static File fileLittleAFound = new File("littleAFound");
+	static File fileBigA = new File("bigA");
+	static File fileBigAFound = new File("bigAFound");
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 	static URL littleA;
 	static URL littleAFound;
-	
+	static URL bigA;
+	static URL bigAFound;
 	
 	@BeforeClass
 	public static void setUp() throws IOException
 	{
 		littleA = new URL("http://littleA.com/");
 		setBody(fileLittleA,"<a href=http://littleAFound.com/>");
+		testPages.put(littleA, fileLittleA);
 		
 		littleAFound = new URL("http://littleAFound.com/");
-		setBody(fileLittleAFound,"not much here");
-		testPages.put(littleA, fileLittleA);
+		setBody(fileLittleAFound,"link from little A tag page");
 		testPages.put(littleAFound, fileLittleAFound);
+		
+		bigA = new URL("http://bigA.com/");
+		setBody(fileBigA,"<A href=http://bigAFound.com/>");
+		testPages.put(bigA, fileBigA);
+
+		bigAFound = new URL("http://bigAFound.com/");
+		setBody(fileBigAFound,"link from a big A tag page");
+		testPages.put(bigA, fileBigAFound);
+		
+
+
 	}
 	
 	private static void setBody(File file, String body) throws IOException
@@ -69,6 +83,13 @@ public class TestWebCrawler {
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
 		assertTrue(HTMLStream.getSearchedURLs().contains(littleAFound));
 		
+	}
+	
+	@Test
+	public void testTagFoundBigA() {
+		wc.crawl(bigA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(bigAFound));
 	}
 	
 	/*
