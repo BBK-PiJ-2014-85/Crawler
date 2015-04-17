@@ -48,6 +48,14 @@ public class TestWebCrawler {
 	static File fileWhitespaceMixA = new File("whitespaceMixA");
 	static URL tagAh;
 	static File filetagAh = new File("tagAh");
+	static URL tagSpaceBeforeA;
+	static File fileTagSpaceBeforeA = new File("tagSpaceBeforeA");
+	static URL withinTag;
+	static File fileWithinTag = new File("withinTag");
+	static URL multipleTags;
+	static File fileMultipleTags = new File("multipleTags");
+	static URL tagSpaceBeforeAll;
+	static File fileTagSpaceBeforeAll = new File("tagSpaceBeforeAll");
 	
 	static URL baseLower;
 	static File fileBaseLower = new File("baseLower");
@@ -73,9 +81,9 @@ public class TestWebCrawler {
 		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasefNotReadIn = new URL("http://basef.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasNotReadIn = new URL("http://bas.com/found"),fileSimpleLinkFound);
+		testPages.put(baseAfterTagAIgnored = new URL("http://baseAfterTagA.com/found"), fileSimpleLinkFound)
 		
-		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/ > ");
-
+		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
 		addPage(bigA = new URL("http://bigA.com/"),fileBigA,"<A href=http://simpleLinkFound.com/>");
 		addPage(multipleSpaceA = new URL("http://multipleSpaceA.com/"),fileMultipleSpaceA,"<a  href=http://simpleLinkFound.com/>");
 		addPage(tabA = new URL("http://tabA.com/"),fileTabA,"<a\thref=http://simpleLinkFound.com/>");
@@ -84,12 +92,31 @@ public class TestWebCrawler {
 		addPage(multipleLinebreakA = new URL("http://multipleLinebreakA.com/"),fileMultipleLinebreakA,"<a\n\nhref=http://simpleLinkFound.com/>");
 		addPage(whitespaceMixA = new URL("http://whitespaceMixA.com/"),fileWhitespaceMixA,"<a\n \t \n \t  \t \n\n\nhref=http://simpleLinkFound.com/>");
 		addPage(tagAh = new URL("http://tagAH.com/"),filetagAh,"<ah href=http://simpleLinkFound.com/>");
-	
+		addPage(tagSpaceBeforeA = new URL("http://tagSpaceBeforeA.com/"),fileTagSpaceBeforeA, "< a href=http://simpleLinkFound.com/>");
+		addPage(withinTag = new URL("http://withinTag.com/"),fileWithinTag,"<start href=http://littleA.com/> <a href=http://simpleLinkFound.com/>");
+		addPage(multipleTags = new URL("http://multipleTags.com/"),fileMultipleTags,"<a href=http://littleA.com/></a> <a href=http://simpleLinkFound.com/> >");
+		addPage(tagSpaceBeforeAll = new URL("http://tagSpaceBeforeAll.com/"),fileTagSpaceBeforeAll," <a href=http://simpleLinkFound.com/>");
+		addPage(tagEOF = new URL("http://tagEOF.com/"),fileTagEOF,"<");
+		addPage(tagEOFOnceRead = new URL("http://tagEOFOnceRead.com/"),fileTagEOFOnceRead,"<a ");
+		
 		addPage(baseLower = new URL("http://baseLower.com/"),fileBaseLower,"<base href=http://baseLink.com/> <a href=found>");
 		addPage(baseUpper = new URL("http://baseUpper.com/"),fileBaseUpper,"<BASE href=http://baseLink.com/> <a href=found>");
 		addPage(baseMixedCase = new URL("http://baseMixedCase.com/"),fileBaseMixedCase,"<bAsE href=http://baseLink.com/> <a href=found>");
 		addPage(tagBasef = new URL("http://tagBasef.com/"),fileTagBasef,"<basef href=http://baseLink.com/> <a href=found>");
 		addPage(tagBas = new URL("http://tagBas.com"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
+		addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
+		addPage(baseAfterTagA = new URL("http://baseAfterTagA.com/"),fileBaseAfterTagA,"<a href=http://simpleLinkFound.com/> <base href=http://baseLink.com/><a href=found>");
+		addPage(baseAfterBase = new URL("http://baseAfterBase.com/",fileBaseAferBase,)"<base href=http://baseLink.com/><base href=http://baseAfterTagA.com/><a href=found>");
+		addPage(baseAfterEmptyBase = new URL("http://baseAfterEmptyBase.com/"),fileBaseAfterEmptyBase,"<base ><base href=http://baseAfterTagA.com/><a href=found>");
+		
+	 	* space between < and a not read in
+	 	* graceful if EOF in middle (should just be ignored)
+	 	* read in within another tag
+	 	* test within body statement
+	 	* test not read in if written within text
+	 	* test base not read in if after tag a
+	
+	
 	}
 	
 	@AfterClass //use this to delete fioes after test has run to avoid cluttering the program folder
@@ -133,7 +160,7 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 		
 	}
-	/*
+	
 	@Test
 	public void testTagFoundBigA() {
 		wc.crawl(bigA, file);
@@ -225,8 +252,6 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(tagBasNotReadIn));
 	}
 
-	*/
-
 
 
 	
@@ -244,20 +269,13 @@ public class TestWebCrawler {
 	 * HTML READING
 	 * 
 	 * 	DETERMINE TAG READ IN PROPERLY
-	 	* base read in
-	 	* base not added as link
-	 	* bAsE read in
-	 	* BaSe read in
-	 	* <ah not read in
-	 	* <baseref not read in
-	 	* <b, <bas not read in
+
 	 	* space between < and a not read in
-	 	* graceful if EOF
+	 	* graceful if EOF in middle (should just be ignored)
 	 	* read in within another tag
-	 	* tag with no gap until >
-	 	* tag with gap before >
 	 	* test within body statement
-	 	* test within text statement
+	 	* test not read in if written within text
+	 	* test base not read in if after tag a
 	 * 
 	 	* DETERMINE HREF FOUND PROPERLY
 	 	* Only read in for A and Base
@@ -265,11 +283,17 @@ public class TestWebCrawler {
 	 	* href found if after a null element
 	 	* href found if after an = elemnt
 	 	* href not read in if after >
-	 	* graceful if EOF directly after
+	 	* graceful if EOF directly after and within
 	 	* graceful if EOF during middle of base
+	 	* hreff not include
+	 	* hre not included
+	 	* HREF not included
 	 * 
 	 	* HREF LINK READ PROPERLY
 		* not added if contains >
+		* ok if word after the link
+		* ok if > directly after it
+		* ok if whitesapce directly after it
 		* reads encapsulated by "" properly
 		* reads encapsualted by '' properly
 		* returns nothing if null (i.e without =)
