@@ -28,6 +28,8 @@ public class TestWebCrawler {
 	static URL simpleBaseLinkFound;
 	static URL tagBasefNotReadIn;
 	static URL tagBasNotReadIn;
+	static URL baseAfterTagAIgnored;
+	static URL baseAfterEmptyBaseIgnored;
 	
 	static URL littleA;
 	static File fileLittleA = new File("littleA");
@@ -56,6 +58,10 @@ public class TestWebCrawler {
 	static File fileMultipleTags = new File("multipleTags");
 	static URL tagSpaceBeforeAll;
 	static File fileTagSpaceBeforeAll = new File("tagSpaceBeforeAll");
+	static URL tagEOF;
+	static File fileTagEOF = new File("tagEOF");
+	static URL tagEOFOnceRead;
+	static File fileTagEOFOnceRead = new File ("tagEOFOnceRead");
 	
 	static URL baseLower;
 	static File fileBaseLower = new File("baseLower");
@@ -66,7 +72,16 @@ public class TestWebCrawler {
 	static URL tagBasef;
 	static File fileTagBasef = new File("tagBasef");
 	static URL tagBas;
-	static File fileTagBas = new File("TagBas");
+	static File fileTagBas = new File("tagBas");
+	static URL tagEOFBas;
+	static File fileTagEOFBas = new File("tagEOFBas");
+	static URL baseAfterTagA;
+	static File fileBaseAfterTagA = new File("baseAfterTagA");
+	static URL baseAfterBase;
+	static File fileBaseAfterBase = new File("baseAfterBase");
+	static URL baseAfterEmptyBase;
+	static File fileBaseAfterEmptyBase = new File("baseAfterEmptyBase");
+	
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
@@ -81,7 +96,8 @@ public class TestWebCrawler {
 		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasefNotReadIn = new URL("http://basef.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasNotReadIn = new URL("http://bas.com/found"),fileSimpleLinkFound);
-		testPages.put(baseAfterTagAIgnored = new URL("http://baseAfterTagA.com/found"), fileSimpleLinkFound)
+		testPages.put(baseAfterTagAIgnored = new URL("http://baseAfterTagA.com/found"), fileSimpleLinkFound);
+		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBaseIgnored.com/found"),fileSimpleLinkFound);
 		
 		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
 		addPage(bigA = new URL("http://bigA.com/"),fileBigA,"<A href=http://simpleLinkFound.com/>");
@@ -106,16 +122,16 @@ public class TestWebCrawler {
 		addPage(tagBas = new URL("http://tagBas.com"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
 		addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
 		addPage(baseAfterTagA = new URL("http://baseAfterTagA.com/"),fileBaseAfterTagA,"<a href=http://simpleLinkFound.com/> <base href=http://baseLink.com/><a href=found>");
-		addPage(baseAfterBase = new URL("http://baseAfterBase.com/",fileBaseAferBase,)"<base href=http://baseLink.com/><base href=http://baseAfterTagA.com/><a href=found>");
+		addPage(baseAfterBase = new URL("http://baseAfterBase.com/"),fileBaseAfterBase,"<base href=http://baseLink.com/><base href=http://baseAfterTagA.com/><a href=found>");
 		addPage(baseAfterEmptyBase = new URL("http://baseAfterEmptyBase.com/"),fileBaseAfterEmptyBase,"<base ><base href=http://baseAfterTagA.com/><a href=found>");
 		
-	 	* space between < and a not read in
+/*	 	* space between < and a not read in
 	 	* graceful if EOF in middle (should just be ignored)
 	 	* read in within another tag
 	 	* test within body statement
 	 	* test not read in if written within text
 	 	* test base not read in if after tag a
-	
+	*/
 	
 	}
 	
