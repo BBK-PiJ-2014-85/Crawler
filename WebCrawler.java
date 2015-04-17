@@ -74,7 +74,9 @@ import java.util.Comparator;
  * - breadth and max links set to 0 will not limit by these, if setting then at least one needs to be >0
  * - only http: read by default. Have settings within code to easilly add more to it.
  * -doesnt check for close tags, just so that the previous open tag without a close tag is an a
- * TODO: should add a slash if there isnt one at the end, although then need to determine if it is a file or not at the end.
+ * TODO: should add a slash if there isnt one at the end, although then need to determine if it is a file or not at the end.jl
+ * - only reads in base if it is before the first a, and base can only be read in once.
+ * doesnt matter if tag isnt closed. Idea is to assume webpage has legitimate html, but rather than validate it, read in the intention
  */
 
 public class WebCrawler {
