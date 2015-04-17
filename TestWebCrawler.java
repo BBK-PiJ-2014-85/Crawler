@@ -1,10 +1,76 @@
-import static org.junit.Assert.*;
 
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
 public class TestWebCrawler {
 
+	WebCrawler wc;
+	
+	File file = new File("testDatabase.txt");
+	static File fileLittleA = new File("littleA");
+	static File fileLittleAFound = new File("littleAFound");
+	
+	static Map<URL,File> testPages = new HashMap<URL,File>();
+	static URL littleA;
+	static URL littleAFound;
+	
+	
+	@BeforeClass
+	public static void setUp() throws IOException
+	{
+		littleA = new URL("http://littleA.com/");
+		setBody(fileLittleA,"<a href=http://littleAFound.com/>");
+		
+		littleAFound = new URL("http://littleAFound.com/");
+		setBody(fileLittleAFound,"not much here");
+		testPages.put(littleA, fileLittleA);
+		testPages.put(littleAFound, fileLittleAFound);
+	}
+	
+	private static void setBody(File file, String body) throws IOException
+	{
+		
+		FileWriter fw = new FileWriter(file);
+		fw.write(body);
+		fw.close();
+	}
+	
+	
+	@Before 
+	public void cleanStart() throws MalformedURLException
+	{
+		HTMLStream.reset();
+		HTMLStream.addTestURLs(testPages);
+		
+		if (file.exists()) file.delete();
+	
+		wc = new WebCrawler(); 
+	}
+	
+	// DETERMINE TAG READ IN PROPERLY
+	
+	@Test
+	public void testTagFoundLittleA() {
+		wc.crawl(littleA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(littleAFound));
+		
+	}
+	
 	/*
 	 * Create mock class which can set webpages for it to see. I.e., have it return the stream to the WebCrawler. In live, it will use default which will access the site,
 	 * for testing, you can feed it the files. Could be a static class/method, with reset and set functions. Will be left in in live, but wont be set in practice.
@@ -19,7 +85,7 @@ public class TestWebCrawler {
 	 * HTML READING
 	 * 
 	 * 	DETERMINE TAG READ IN PROPERLY
-	 	* a read in
+	 	* a read in 
 	 	* base read in
 	 	* base not added as link
 	 	* A read in
@@ -30,6 +96,11 @@ public class TestWebCrawler {
 	 	* <b, <bas not read in
 	 	* space between < and a not read in
 	 	* graceful if EOF
+	 	* read in within another tag
+	 	* tag with no gap until >
+	 	* tag with gap before >
+	 	* test within body statement
+	 	* test within text statement
 	 * 
 	 	* DETERMINE HREF FOUND PROPERLY
 	 	* Only read in for A and Base
@@ -145,10 +216,7 @@ public class TestWebCrawler {
 	 * 
 	 */
 	
-	@Test
-	public void test() {
-		fail("Not yet implemented");
-	}
+
 	
 
 
