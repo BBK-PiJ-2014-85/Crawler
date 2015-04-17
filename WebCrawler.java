@@ -73,6 +73,8 @@ import java.util.Comparator;
  * - when setting breadth and max links, max links includes files of a different protocol that wont be opened.
  * - breadth and max links set to 0 will not limit by these, if setting then at least one needs to be >0
  * - only http: read by default. Have settings within code to easilly add more to it.
+ * -doesnt check for close tags, just so that the previous open tag without a close tag is an a
+ * TODO: should add a slash if there isnt one at the end, although then need to determine if it is a file or not at the end.
  */
 
 public class WebCrawler {
@@ -431,20 +433,24 @@ public class WebCrawler {
 			
 				if (tagIsA || tagIsBase)
 				{
+
 					boolean noLinkContained=false;
 					while (n != -1 && (char) n != Character.MIN_VALUE && !noLinkContained)
 					{
 						if (!firstTagFound) firstTagFound = true;
 				
 						n = HTMLread.skipSpace(currentStream,'>');
-				
+
 						if ((char) n == 'h')
 						{
+
 							if (matchStringAndMoveN(true,"ref"))
 							{
+								
 								n = currentStream.read();
 								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
 								{
+
 									URL returnURL = getLink('>');
 									if (returnURL == null) noLinkContained = true;
 									else if (tagIsA) return returnURL;
@@ -454,6 +460,7 @@ public class WebCrawler {
 						}
 						
 						moveToNextElement('>');
+
 					}
 				}
 				
@@ -484,6 +491,7 @@ public class WebCrawler {
 	 */
 	private URL getLink(char ch)
 	{
+
 		if (n == -1 || (char) n == ch) return null;
 		if ((char) n != '=') n = HTMLread.skipSpace(currentStream, ch); //move it from space to equals
 
@@ -495,7 +503,6 @@ public class WebCrawler {
 		
 		if ((char) n == '\'' || (char) n == '"') tempString = HTMLread.readString(currentStream, (char) n, ch);
 		else tempString = HTMLread.readStringUntilWhitespace(currentStream, ch);
-		
 		if (tempString == null) return null;
 		urlRaw += tempString;
 
@@ -590,21 +597,21 @@ public class WebCrawler {
 	{
 		
 		if (n != -1 && (char) n != '=')
-		{
+		{		
 			if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
 			else
 			{
-				while ((char) n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+				while (n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+
 				if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
 			}
 		}
-		
+
 		//current point now is either eof, end of tag (>), the start of the next element (should the previous no have had an equals) of the equals
 		
 		if ((char) n == '=')
 		{
 			n = HTMLread.skipSpace(currentStream, '<');
-			
 			if (n!= -1 && (char) n != Character.MIN_VALUE)
 			{
 				if ((char) n == '"' || (char) n == '\'') 
@@ -619,6 +626,7 @@ public class WebCrawler {
 				}
 			}
 		}
+
 	}
 	
 	
