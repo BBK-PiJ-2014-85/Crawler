@@ -69,12 +69,12 @@ public class TestWebCrawler {
 	@BeforeClass
 	public static void setUp() throws IOException
 	{
-		addPage(simpleLinkFound = new URL("http://simpleLinkFound"),fileSimpleLinkFound,"Link was followed");
+		addPage(simpleLinkFound = new URL("http://simpleLinkFound.com/"),fileSimpleLinkFound,"Link was followed");
 		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasefNotReadIn = new URL("http://basef.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasNotReadIn = new URL("http://bas.com/found"),fileSimpleLinkFound);
 		
-		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
+		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/ > ");
 
 		addPage(bigA = new URL("http://bigA.com/"),fileBigA,"<A href=http://simpleLinkFound.com/>");
 		addPage(multipleSpaceA = new URL("http://multipleSpaceA.com/"),fileMultipleSpaceA,"<a  href=http://simpleLinkFound.com/>");
@@ -133,7 +133,7 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 		
 	}
-	
+	/*
 	@Test
 	public void testTagFoundBigA() {
 		wc.crawl(bigA, file);
@@ -225,7 +225,7 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(tagBasNotReadIn));
 	}
 
-	
+	*/
 
 
 
