@@ -1,4 +1,6 @@
-import java.io.ByteArrayInputStream;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -16,7 +18,7 @@ import java.util.Map;
 
 public class HTMLStream {
 
-	private static Map<URL,String> pages = null;
+	private static Map<URL,File> pages = null;
 	private static List<URL> searchedURLs = new ArrayList<URL>();
 	
 /**
@@ -25,7 +27,7 @@ public class HTMLStream {
  * @param testPages the map containing each test URL and the corresponding page to return if it is searched
  */
 	
-	public static void addTestURLs(Map<URL,String> testPages) {pages = testPages;}
+	public static void addTestURLs(Map<URL,File> testPages) {pages = testPages;}
 
 	/**
 	 * Returns the stream from an input URL, either from an http: connection or of a set page should a testing urls have been defined. Should a test database be defined,
@@ -42,7 +44,7 @@ public class HTMLStream {
 		else 
 		{
 			searchedURLs.add(url);
-			return new ByteArrayInputStream(pages.get(url).getBytes());
+			return new FileInputStream(pages.get(url));
 		}
 	}
 	
@@ -50,7 +52,7 @@ public class HTMLStream {
 	 * Resets the stream to no longer use a test database but rather return the stream from the http: connection. It also resets the search history of the crawler.
 	 */
 	
-	public static void clearSetURLS() 
+	public static void reset() 
 	{
 		pages=null;
 		searchedURLs = new ArrayList<URL>();
