@@ -393,7 +393,7 @@ public class WebCrawler {
 		}
 
 	}
-	
+	/*
 	public URL getNextURLFromCurrentStream(URL url) throws IOException
 	{
 		try {
@@ -403,13 +403,13 @@ public class WebCrawler {
 			e.printStackTrace();
 		}
 	return getNextURLFromCurrentStream();	
-	}
+	}*/
 	
 	//return null if there are no urls left
 	public URL getNextURLFromCurrentStream() throws IOException
 	{
 		URL nextURL=null;
-		URL baseURL = trimURLToLastSlash(currentURL);
+		/*URL*/ baseURL = trimURLToLastSlash(currentURL).toString();
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
 		while(HTMLread.readUntil(currentStream, '<', '<')) //TODO: not sure what this should stop on, it already returns false at end of file
 		{
@@ -451,26 +451,22 @@ public class WebCrawler {
 								n = currentStream.read();
 								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
 								{
-
 									URL returnURL = getLink('>');
 									if (returnURL == null) noLinkContained = true;
 									else if (tagIsA) return returnURL;
 									else {
-										baseURL = trimURLToLastSlash(returnURL);
+										baseURL = trimURLToLastSlash(returnURL).toString();
 										baseTagAdded=true;
+										
 									}
 								}
 							}
 						}
-						
-						if ((char) n != Character.MIN_VALUE) moveToNextElement('>');
+						if ((char) n != Character.MIN_VALUE & !baseTagAdded) moveToNextElement('>');
 
 					}
 				}
-				
 			}			
-			
-	
 		
 		//make sure break when found
 		
@@ -494,7 +490,6 @@ public class WebCrawler {
 	 */
 	private URL getLink(char ch)
 	{
-
 		if (n == -1 || (char) n == ch) return null;
 		if ((char) n != '=') n = HTMLread.skipSpace(currentStream, ch); //move it from space to equals
 
@@ -508,14 +503,12 @@ public class WebCrawler {
 		else tempString = HTMLread.readStringUntilWhitespace(currentStream, ch);
 		if (tempString == null) return null;
 		urlRaw += tempString;
-
 		return convertStringToURL(urlRaw);
 	}
 	
 	private URL convertStringToURL(String input)
 	{
 		// Standards to write this to: http://tools.ietf.org/html/rfc1808#section-5
-
 		String linkString="";
 		
 		String stringWithoutParameters ="";
