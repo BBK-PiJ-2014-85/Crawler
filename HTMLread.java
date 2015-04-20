@@ -106,11 +106,10 @@ public class HTMLread {
 	 * 
 	 * If whitespace is encountered first, the string of chars up to but not including the whitespace is returned.
 	 * 
-	 * If the parameter is found first, the null string is returned.
 	 * 
 	 * @param stream the input stream
 	 * @param ch the character which stops the stream being consumed and returns the null stream
-	 * @return the String of all chars encountered until the whitespace was encountered, or null if the input parameter was encountered first
+	 * @return the String of all chars encountered until the whitespace or parameter was encountered
 	 */
 	
 	public static String readStringUntilWhitespace(InputStream stream, char ch)
@@ -120,8 +119,7 @@ public class HTMLread {
 		try {
 			while ((n = stream.read()) != -1)
 			{
-				if (Character.isWhitespace((char) n)) return output;
-				else if ((char) n  == ch) return null;
+				if (Character.isWhitespace((char) n) || (char) n == ch) return output;
 				else output += (char) n;
 			}
 		} catch (IOException e) {
