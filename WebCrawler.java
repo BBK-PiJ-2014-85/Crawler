@@ -408,13 +408,11 @@ public class WebCrawler {
 	//return null if there are no urls left
 	public URL getNextURLFromCurrentStream() throws IOException
 	{
-		System.out.println("Running get URL from Stream");
 		URL nextURL=null;
 		URL baseURL = trimURLToLastSlash(currentURL);
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
 		while(HTMLread.readUntil(currentStream, '<', '<')) //TODO: not sure what this should stop on, it already returns false at end of file
 		{
-			System.out.println("Looping to next <");
 				n = currentStream.read();
 				if (n==-1) break;
 				char c = (char) n;
@@ -438,12 +436,10 @@ public class WebCrawler {
 			
 				if (tagIsA || tagIsBase)
 				{
-					System.out.println("Found tag...");
 					boolean noLinkContained=false;
 					boolean baseTagAdded = false;
 					while (n != -1 && (char) n != Character.MIN_VALUE && !noLinkContained && !baseTagAdded)
 					{
-						System.out.println("Running little loop");
 						if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
 				
 						n = HTMLread.skipSpace(currentStream,'>');
@@ -452,13 +448,11 @@ public class WebCrawler {
 
 							if (matchStringAndMoveN(true,"ref"))
 							{
-								System.out.println("Found href...");
 								n = currentStream.read();
 								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
 								{
 
 									URL returnURL = getLink('>');
-									System.out.println("Returned URL is: " + returnURL);
 									if (returnURL == null) noLinkContained = true;
 									else if (tagIsA) return returnURL;
 									else {
@@ -476,7 +470,6 @@ public class WebCrawler {
 				
 			}			
 			
-		System.out.println("Broken from loop: " + (char) n);
 	
 		
 		//make sure break when found
