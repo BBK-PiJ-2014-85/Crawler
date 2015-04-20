@@ -96,6 +96,7 @@ public class WebCrawler {
 	int n;
 	String domainURL;
 	String baseURL;
+	boolean firstLinkFromPageFound;
 
 	/* Comparator below defines whether two URLs are deemed duplicate for matches. This is defined as not case sensitive, and if one ends in a forwards slash
 		and the other doesnt, but otherwise they are the same, these are determined to be the same*/
@@ -341,6 +342,7 @@ public class WebCrawler {
 		
 			try {
 				currentStream =  HTMLStream.getStream(currentURL);
+				firstLinkFromPageFound = false;
 			} catch (IOException e) {
 				e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
 			}  	
@@ -417,10 +419,9 @@ public class WebCrawler {
 				char c = (char) n;
 				boolean tagIsBase = false;
 				boolean tagIsA = false;
-				boolean linkFound = false;
 				String link="";
 				
-				if (!firstTagFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag, and must be beofer an A tag
+				if (!firstLinkFromPageFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag, and must be beofer an A tag
 				{
 					if (matchStringAndMoveN(false,"ase"))
 					{
@@ -436,11 +437,11 @@ public class WebCrawler {
 			
 				if (tagIsA || tagIsBase)
 				{
-
+					System.out.println("Found tag...");
 					boolean noLinkContained=false;
 					while (n != -1 && (char) n != Character.MIN_VALUE && !noLinkContained)
 					{
-						if (!firstTagFound) firstTagFound = true;
+						if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
 				
 						n = HTMLread.skipSpace(currentStream,'>');
 
@@ -449,12 +450,13 @@ public class WebCrawler {
 
 							if (matchStringAndMoveN(true,"ref"))
 							{
-								
+								System.out.println("Found href...");
 								n = currentStream.read();
 								if (Character.isWhitespace((char) n) || ((char) n == '=')) //href match made
 								{
 
 									URL returnURL = getLink('>');
+									System.out.println("Returned URL is: " + returnURL);
 									if (returnURL == null) noLinkContained = true;
 									else if (tagIsA) return returnURL;
 									else baseURL = trimURLToLastSlash(returnURL);
