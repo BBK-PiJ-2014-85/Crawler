@@ -2,6 +2,7 @@
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -86,7 +87,16 @@ public class TestWebCrawler {
 	static URL baseAfterEmptyBase;
 	static File fileBaseAfterEmptyBase = new File("baseAfterEmptyBase");
 	
+	static URL threeLinks, threeLinksA, threeLinksB, threeLinksC;
+	static File fileThreeLinks = new File("threeLinks");
+	static File fileThreeLinksA = new File("threeLinksA");
+	static File fileThreeLinksB = new File("threeLinksB");
+	static File fileThreeLinksC = new File("threeLinksC");
+	static URL linkA1, linkA2, linkA3, linkB1, linkB2, linkB3, linkC1, linkC2, linkC3;
 	
+	static URL ftpLink;
+	static File fileFTPLink = new File("ftpLink");
+
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
 
@@ -112,7 +122,7 @@ public class TestWebCrawler {
 		addPage(multipleLinebreakA = new URL("http://multipleLinebreakA.com/"),fileMultipleLinebreakA,"<a\n\nhref=http://simpleLinkFound.com/>");
 		addPage(whitespaceMixA = new URL("http://whitespaceMixA.com/"),fileWhitespaceMixA,"<a\n \t \n \t  \t \n\n\nhref=http://simpleLinkFound.com/>");
 		addPage(tagAh = new URL("http://tagAH.com/"),filetagAh,"<ah href=http://simpleLinkFound.com/>");
-		/* here */addPage(tagSpaceBeforeA = new URL("http://tagSpaceBeforeA.com/"),fileTagSpaceBeforeA, "< a href=http://simpleLinkFound.com/>");
+		addPage(tagSpaceBeforeA = new URL("http://tagSpaceBeforeA.com/"),fileTagSpaceBeforeA, "< a href=http://simpleLinkFound.com/>");
 		addPage(withinTag = new URL("http://withinTag.com/"),fileWithinTag,"<start href=http://littleA.com/> <a href=http://simpleLinkFound.com/>");
 		addPage(withinElement = new URL("http://withinElement.com/"),fileWithinElement,"<start href=http://littleA.com <a href=http://simpleLinkFound.com/>");
 		addPage(afterTag = new URL("http://afterTag.com/"),fileAfterTag,"<start href=http://littleA.com <start></start> <a href=http://simpleLinkFound.com/>");
@@ -126,21 +136,29 @@ public class TestWebCrawler {
 		addPage(baseMixedCase = new URL("http://baseMixedCase.com/"),fileBaseMixedCase,"<bAsE href=http://baseLink.com/> <a href=found>");
 		addPage(tagBasef = new URL("http://tagBasef.com/"),fileTagBasef,"<basef href=http://baseLink.com/> <a href=found>");
 		addPage(tagBas = new URL("http://tagBas.com"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
-		/* here */ addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
+		addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
 		addPage(baseAfterTagA = new URL("http://baseAfterTagA.com/"),fileBaseAfterTagA,"<a href=http://simpleLinkFound.com/> <base href=http://baseLink.com/><a href=found>");
 		addPage(baseAfterBase = new URL("http://baseAfterBase.com/"),fileBaseAfterBase,"<base href=http://baseLink.com/><base href=http://baseAfterTagA.com/><a href=found>");
 		addPage(baseAfterEmptyBase = new URL("http://baseAfterEmptyBase.com/"),fileBaseAfterEmptyBase,"<base ><base href=http://baseAfterTagA.com/><a href=found>");
-	
 		
+		//Files to test breadth and depth searches
+		
+		addPage(threeLinks = new URL("http://threeLinks.com/"),fileThreeLinks, "<a href=http://linkA.com/></a><a href=http://linkB.com/></a><a href=http://linkC.com/></a>");
+		addPage(threeLinksA = new URL("http://linkA.com/"),fileThreeLinksA, "<a href=http://linkA1.com/></a><a href=http://linkA2.com/></a><a href=http://linkA3.com/></a>");
+		addPage(threeLinksB = new URL("http://linkB.com/"),fileThreeLinksB, "<a href=http://linkB1.com/></a><a href=http://linkB2.com/></a><a href=http://linkB3.com/></a>");
+		addPage(threeLinksC = new URL("http://LinkC.com/"),fileThreeLinksC, "<a href=http://linkC1.com/></a><a href=http://linkC2.com/></a><a href=http://linkC3.com/></a>");
+		testPages.put(linkA1 = new URL("http://linkA1.com/"), fileSimpleLinkFound);
+		testPages.put(linkA2 = new URL("http://linkA2.com/"), fileSimpleLinkFound);
+		testPages.put(linkA3 = new URL("http://linkA3.com/"), fileSimpleLinkFound);
+		testPages.put(linkB1 = new URL("http://linkB1.com/"), fileSimpleLinkFound);
+		testPages.put(linkB2 = new URL("http://linkB2.com/"), fileSimpleLinkFound);
+		testPages.put(linkB3 = new URL("http://linkB3.com/"), fileSimpleLinkFound);
+		testPages.put(linkC1 = new URL("http://linkC1.com/"), fileSimpleLinkFound);
+		testPages.put(linkC2 = new URL("http://linkC2.com/"), fileSimpleLinkFound);
+		testPages.put(linkC3 = new URL("http://linkC3.com/"), fileSimpleLinkFound);
+		addPage(ftpLink = new URL("http://ftpLink.com/"), fileFTPLink, "<a href=http://linkA.com/></a><a href=ftp://linkB.com/>");
 
-
-		/*	 	* space between < and a not read in
-	 	* graceful if EOF in middle (should just be ignored)
-	 	* 	t	read in within another tag
-	 	* test within body statement
-	 	* 	t	test not read in if written within text
-	 	* test base not read in if after tag a
-	*/
+		//TODO: End of files 
 	
 	}
 	
@@ -375,8 +393,85 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(baseAfterEmptyBaseIgnored));
 	}
 	
+	@Test
+	public void testTagWithinTextNotFound()
+	{
+		fail("Need to add test that link within text not detected");
+	}
+	
+	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
-
+	@Test
+	public void testMaxDepth0MaxFiles0error()
+	{
+		fail("Need to add adequate test that errors when depth and breadth both set to zero");
+	}
+	
+	@Test
+	public void maxDepth0DoesntLimit()
+	{
+		wc = new WebCrawler(5,0);
+		wc.crawl(threeLinks,file);
+		assertEquals(5,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void maxFile0DoesntLimit()
+	{
+		wc = new WebCrawler(0,2);
+		wc.crawl(threeLinks,file);
+		assertEquals(4,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testMaxDepthNegativeIntError()
+	{
+		wc = new WebCrawler(-2,4);
+		fail("Put error expected in here");
+	}
+	
+	@Test
+	public void testMaxFileNegativeIntError()
+	{
+		wc = new WebCrawler(4,-2);
+		fail("Put error expected in here");
+	}
+	
+	@Test 
+	public void maxDepthLimitAppliedProperly()
+	{
+		wc = new WebCrawler(20,2);
+		wc.crawl(threeLinks,file);
+		assertEquals(4,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void maxFileSearchedLimitProperly()
+	{
+		wc = new WebCrawler(3,20);
+		wc.crawl(threeLinks,file);
+		assertEquals(3,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void checkDefaultMaxDepthAndMaxFilesSetCorrectly()
+	{
+		fail("Set up a test to check the limit is set properly");
+	}
+	
+	@Test 
+	public void checkNotSearchableProtocolCountedInLinkLimit()
+	{
+		wc = new WebCrawler(4,20);
+		wc.crawl(ftpLink,file);
+		assertEquals(4,HTMLStream.getSearchedURLs().size());
+		assertTrue(!HTMLStream.getSearchedURLs().contains(linkA2));
+	}
+		
+	//TODO: End of tests
+	
+	
+	
 	
 	/*
 	 * Create mock class which can set webpages for it to see. I.e., have it return the stream to the WebCrawler. In live, it will use default which will access the site,
@@ -388,6 +483,10 @@ public class TestWebCrawler {
 	 * 
 	 * Loops through page properly
 	 * Works in appropriate breadth first priority order
+	 * doesn't search ftp's but adds them to list (i.e. only searches http://)
+	 * returns appropriate error if file already exists 
+	 * list is printed properly
+	 * 
 	 * 
 	 * HTML READING
 	 * 
@@ -423,11 +522,6 @@ public class TestWebCrawler {
 		* LINK FORMED PROPERLY
 		* # removed properly
 		* test all examples of formulating a link as shown on standards site, including wierd cases
-	 * 
-		* BASE
-		* Base used properly when before
-		* Base ignored when not before
-		* not added as link
 	 *  
 	 * INVALID URL
 	 * acts graceful when URL provided is invalid
@@ -442,14 +536,7 @@ public class TestWebCrawler {
 	 * assigns duplicate after relative link made up
 	 * 
 	 * FILE EXISTS
-	 * returns appropriate error if exists 
-	 * 
-	 * DEPTH AND BREADTH
-	 * 
-	 * applies properly to not go over depth.
-	 * 0 doesnt limit.
-	 * negativenumber either or both errors error 
-	 * cant have both zeros 
+
 	 * 
 	 * FILE READING
 	 * only http read
