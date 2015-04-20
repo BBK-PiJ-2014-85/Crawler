@@ -73,7 +73,7 @@ public class TestWebCrawler {
 	static URL baseUpper;
 	static File fileBaseUpper = new File("baseUpper");
 	static URL baseMixedCase;
-	static File fileBaseMixedCase = new File("baseMaxedCase");
+	static File fileBaseMixedCase = new File("baseMixedCase");
 	static URL tagBasef;
 	static File fileTagBasef = new File("tagBasef");
 	static URL tagBas;
@@ -108,10 +108,11 @@ public class TestWebCrawler {
 	{
 		addPage(simpleLinkFound = new URL("http://simpleLinkFound.com/"),fileSimpleLinkFound,"Link was followed");
 		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
-		testPages.put(tagBasefNotReadIn = new URL("http://basef.com/found"), fileSimpleLinkFound);
-		testPages.put(tagBasNotReadIn = new URL("http://bas.com/found"),fileSimpleLinkFound);
+		testPages.put(tagBasefNotReadIn = new URL("http://tagBasef.com/found"), fileSimpleLinkFound);
+		testPages.put(tagBasNotReadIn = new URL("http://tagBas.com/found"),fileSimpleLinkFound);
 		testPages.put(baseAfterTagAIgnored = new URL("http://baseAfterTagA.com/found"), fileSimpleLinkFound);
-		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBaseIgnored.com/found"),fileSimpleLinkFound);
+//		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBaseIgnored.com/found"),fileSimpleLinkFound);
+		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBase.com/found"),fileSimpleLinkFound);
 		
 		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
 		addPage(bigA = new URL("http://bigA.com/"),fileBigA,"<A href=http://simpleLinkFound.com/>");
@@ -135,7 +136,7 @@ public class TestWebCrawler {
 		addPage(baseUpper = new URL("http://baseUpper.com/"),fileBaseUpper,"<BASE href=http://baseLink.com/> <a href=found>");
 		addPage(baseMixedCase = new URL("http://baseMixedCase.com/"),fileBaseMixedCase,"<bAsE href=http://baseLink.com/> <a href=found>");
 		addPage(tagBasef = new URL("http://tagBasef.com/"),fileTagBasef,"<basef href=http://baseLink.com/> <a href=found>");
-		addPage(tagBas = new URL("http://tagBas.com"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
+		addPage(tagBas = new URL("http://tagBas.com/"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
 		addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
 		addPage(baseAfterTagA = new URL("http://baseAfterTagA.com/"),fileBaseAfterTagA,"<a href=http://simpleLinkFound.com/> <base href=http://baseLink.com/><a href=found>");
 		addPage(baseAfterBase = new URL("http://baseAfterBase.com/"),fileBaseAfterBase,"<base href=http://baseLink.com/><base href=http://baseAfterTagA.com/><a href=found>");
@@ -176,7 +177,6 @@ public class TestWebCrawler {
 	
 	private static void setBody(File file, String body) throws IOException
 	{
-		
 		FileWriter fw = new FileWriter(file);
 		fw.write(body);
 		fw.close();
@@ -256,8 +256,8 @@ public class TestWebCrawler {
 	@Test
 	public void testTagAH() {
 		wc.crawl(tagAh, file);
-		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagAh));
 	}
 	
 	@Test
@@ -299,8 +299,8 @@ public class TestWebCrawler {
 	public void testTagWithSpaceBeforeA()
 	{
 		wc.crawl(tagSpaceBeforeA, file);
-		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagSpaceBeforeA));
 	}
 
 	@Test
@@ -486,6 +486,7 @@ public class TestWebCrawler {
 	 * doesn't search ftp's but adds them to list (i.e. only searches http://)
 	 * returns appropriate error if file already exists 
 	 * list is printed properly
+	 * if doesnt have / at end of domain, add it. If alreadyy 3, then trim to last as its a file.
 	 * 
 	 * 
 	 * HTML READING
@@ -524,7 +525,7 @@ public class TestWebCrawler {
 		* test all examples of formulating a link as shown on standards site, including wierd cases
 	 *  
 	 * INVALID URL
-	 * acts graceful when URL provided is invalid
+	 * acts graceful when URL provided is invalid 
 	 * acts graceful when link is not found (and still added to file)	
 	 * 
 	 * DUPLICATES
