@@ -444,7 +444,6 @@ public class WebCrawler {
 						if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
 				
 						n = HTMLread.skipSpace(currentStream,'>');
-
 						if ((char) n == 'h')
 						{
 
@@ -464,7 +463,7 @@ public class WebCrawler {
 							}
 						}
 						
-						moveToNextElement('>');
+						if ((char) n != Character.MIN_VALUE) moveToNextElement('>');
 
 					}
 				}
