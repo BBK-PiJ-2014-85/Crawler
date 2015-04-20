@@ -62,6 +62,10 @@ public class TestWebCrawler {
 	static File fileTagEOF = new File("tagEOF");
 	static URL tagEOFOnceRead;
 	static File fileTagEOFOnceRead = new File ("tagEOFOnceRead");
+	static URL withinElement;
+	static File fileWithinElement = new File("withinElement");
+	static URL afterTag;
+	static File fileAfterTag = new File("afterTag");
 	
 	static URL baseLower;
 	static File fileBaseLower = new File("baseLower");
@@ -108,8 +112,10 @@ public class TestWebCrawler {
 		addPage(multipleLinebreakA = new URL("http://multipleLinebreakA.com/"),fileMultipleLinebreakA,"<a\n\nhref=http://simpleLinkFound.com/>");
 		addPage(whitespaceMixA = new URL("http://whitespaceMixA.com/"),fileWhitespaceMixA,"<a\n \t \n \t  \t \n\n\nhref=http://simpleLinkFound.com/>");
 		addPage(tagAh = new URL("http://tagAH.com/"),filetagAh,"<ah href=http://simpleLinkFound.com/>");
-		addPage(tagSpaceBeforeA = new URL("http://tagSpaceBeforeA.com/"),fileTagSpaceBeforeA, "< a href=http://simpleLinkFound.com/>");
+		/* here */addPage(tagSpaceBeforeA = new URL("http://tagSpaceBeforeA.com/"),fileTagSpaceBeforeA, "< a href=http://simpleLinkFound.com/>");
 		addPage(withinTag = new URL("http://withinTag.com/"),fileWithinTag,"<start href=http://littleA.com/> <a href=http://simpleLinkFound.com/>");
+		addPage(withinElement = new URL("http://withinElement.com/"),fileWithinElement,"<start href=http://littleA.com <a href=http://simpleLinkFound.com/>");
+		addPage(afterTag = new URL("http://afterTag.com/"),fileAfterTag,"<start href=http://littleA.com <start></start> <a href=http://simpleLinkFound.com/>");
 		addPage(multipleTags = new URL("http://multipleTags.com/"),fileMultipleTags,"<a href=http://littleA.com/></a> <a href=http://simpleLinkFound.com/> >");
 		addPage(tagSpaceBeforeAll = new URL("http://tagSpaceBeforeAll.com/"),fileTagSpaceBeforeAll," <a href=http://simpleLinkFound.com/>");
 		addPage(tagEOF = new URL("http://tagEOF.com/"),fileTagEOF,"<");
@@ -120,16 +126,19 @@ public class TestWebCrawler {
 		addPage(baseMixedCase = new URL("http://baseMixedCase.com/"),fileBaseMixedCase,"<bAsE href=http://baseLink.com/> <a href=found>");
 		addPage(tagBasef = new URL("http://tagBasef.com/"),fileTagBasef,"<basef href=http://baseLink.com/> <a href=found>");
 		addPage(tagBas = new URL("http://tagBas.com"),fileTagBas,"<bas href=http://baseLink.com/> <a href=found>");
-		addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
+		/* here */ addPage(tagEOFBas = new URL("http://tagEOFBas.com/"), fileTagEOFBas,"<bas");
 		addPage(baseAfterTagA = new URL("http://baseAfterTagA.com/"),fileBaseAfterTagA,"<a href=http://simpleLinkFound.com/> <base href=http://baseLink.com/><a href=found>");
 		addPage(baseAfterBase = new URL("http://baseAfterBase.com/"),fileBaseAfterBase,"<base href=http://baseLink.com/><base href=http://baseAfterTagA.com/><a href=found>");
 		addPage(baseAfterEmptyBase = new URL("http://baseAfterEmptyBase.com/"),fileBaseAfterEmptyBase,"<base ><base href=http://baseAfterTagA.com/><a href=found>");
+	
 		
-/*	 	* space between < and a not read in
+
+
+		/*	 	* space between < and a not read in
 	 	* graceful if EOF in middle (should just be ignored)
-	 	* read in within another tag
+	 	* 	t	read in within another tag
 	 	* test within body statement
-	 	* test not read in if written within text
+	 	* 	t	test not read in if written within text
 	 	* test base not read in if after tag a
 	*/
 	
@@ -267,7 +276,105 @@ public class TestWebCrawler {
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
 		assertTrue(HTMLStream.getSearchedURLs().contains(tagBasNotReadIn));
 	}
+	
+	@Test
+	public void testTagWithSpaceBeforeA()
+	{
+		wc.crawl(tagSpaceBeforeA, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
 
+	@Test
+	public void testTagWithinTag()
+	{
+		wc.crawl(withinTag,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+
+	@Test
+	public void testTagWithinElement()
+	{
+		wc.crawl(withinElement,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound)); //TODO: Need to determine if this link should be returned or not, as it may not make sense if it is, but may lose information if it isnt
+	}
+
+	@Test
+	public void testTagAfterNotLinkTag()
+	{
+		wc.crawl(afterTag,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+
+	@Test
+	public void testTagMultipleTags()
+	{
+		wc.crawl(multipleTags, file);
+		assertEquals(3,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+		assertTrue(HTMLStream.getSearchedURLs().contains(littleA));
+	}
+
+	@Test
+	public void testTagSpaceBeforeAll()
+	{
+		wc.crawl(tagSpaceBeforeAll,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+
+	@Test
+	public void testTagEOF()
+	{
+		wc.crawl(tagEOF,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagEOF));
+	}
+
+	@Test
+	public void testTagEOFOnceTagRead()
+	{
+		wc.crawl(tagEOFOnceRead,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagEOFOnceRead));
+	}
+
+	@Test
+	public void testTagEOFMidTag()
+	{
+		wc.crawl(tagEOFBas,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(tagEOFBas));
+	}
+	
+	@Test
+	public void testBaseAfterTagARead()
+	{
+		wc.crawl(baseAfterTagA,file);
+		assertEquals(3,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+		assertTrue(HTMLStream.getSearchedURLs().contains(baseAfterTagAIgnored));
+	}
+
+	@Test
+	public void testBaseAfterAnotherBaseTag()
+	{
+		wc.crawl(baseAfterBase,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleBaseLinkFound));
+	}
+	
+	@Test
+	public void testBaseAfterEmptyBaseNotReadIn()
+	{
+		wc.crawl(baseAfterEmptyBase,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(baseAfterEmptyBaseIgnored));
+	}
+	
 
 
 	
@@ -285,13 +392,7 @@ public class TestWebCrawler {
 	 * HTML READING
 	 * 
 	 * 	DETERMINE TAG READ IN PROPERLY
-
-	 	* space between < and a not read in
-	 	* graceful if EOF in middle (should just be ignored)
-	 	* read in within another tag
-	 	* test within body statement
 	 	* test not read in if written within text
-	 	* test base not read in if after tag a
 	 * 
 	 	* DETERMINE HREF FOUND PROPERLY
 	 	* Only read in for A and Base
