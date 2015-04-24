@@ -83,6 +83,9 @@ import java.util.Set;
  * -mention defaults for max links and mex depth
  * doesnt matter if tag isnt closed. Idea is to assume webpage has legitimate html, but rather than validate it, read in the intention
  * - negative values not allowed for max depth or file search limit. zero means it doesnt search by this
+ * -TODO: Could add amehtod to set which protocols it will atmept to open
+ * -protocol not case sensitive
+ * - href case sensitive
  */
 
 public class WebCrawler {
@@ -476,8 +479,9 @@ public class WebCrawler {
 								}
 							}
 						}
-						if ((char) n != Character.MIN_VALUE & !baseTagAdded) moveToNextElement('>');
+						if (n != -1 && (char) n != Character.MIN_VALUE & !baseTagAdded) moveToNextElement('>');
 
+	
 					}
 				}
 			}			
@@ -622,6 +626,7 @@ public class WebCrawler {
 		if ((char) n == '=')
 		{
 			n = HTMLread.skipSpace(currentStream, '<');
+
 			if (n!= -1 && (char) n != Character.MIN_VALUE)
 			{
 				if ((char) n == '"' || (char) n == '\'') 
@@ -631,7 +636,9 @@ public class WebCrawler {
 				}
 				else
 				{
-					while ((char) n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+
+					while (n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+
 					if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
 				}
 			}
@@ -649,9 +656,9 @@ public class WebCrawler {
 		boolean matched = true;
 		String remainingWord = input;
 		
-		while (matched && remainingWord.length() != 0)
+		while (matched && remainingWord.length() != 0 && ( (n = currentStream.read()) != -1))
 		{
-			n = currentStream.read();
+			//n = currentStream.read();
 			if (caseSensitive) 
 			{
 				if ((char) n != remainingWord.charAt(0)) matched=false;
@@ -663,7 +670,6 @@ public class WebCrawler {
 			
 			remainingWord = remainingWord.substring(1);
 		}
-		
 		return matched;
 	}
 
