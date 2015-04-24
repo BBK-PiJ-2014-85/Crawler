@@ -461,11 +461,12 @@ public class WebCrawler {
 				{
 					boolean noLinkContained=false;
 					boolean baseTagAdded = false;
+
+					if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
+
+					
 					while (n != -1 && (char) n != Character.MIN_VALUE && (char) n != '>' && !noLinkContained && !baseTagAdded) //should parameterise the >
 					{
-						if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
-				
-
 						if ((char) n == 'h')
 						{
 
