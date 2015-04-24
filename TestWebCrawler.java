@@ -96,7 +96,9 @@ public class TestWebCrawler {
 	
 	static URL ftpLink;
 	static File fileFTPLink = new File("ftpLink");
-
+	static URL ftpOnlyLink, httpUpperCase, httpLowerCase, httpMixedCase;
+//	static File fileFTPOnlyLink = new File("fileFTPOnlyLink");
+	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
 
@@ -157,7 +159,16 @@ public class TestWebCrawler {
 		testPages.put(linkC2 = new URL("http://linkC2.com/"), fileSimpleLinkFound);
 		testPages.put(linkC3 = new URL("http://linkC3.com/"), fileSimpleLinkFound);
 		addPage(ftpLink = new URL("http://ftpLink.com/"), fileFTPLink, "<a href=http://linkA.com/></a><a href=ftp://linkB.com/>");
+		
+		//Files to test http only is searched
+		
+		testPages.put(ftpOnlyLink = new URL("ftp://ftpOnlyLink.com/"), fileSimpleLinkFound);
+		testPages.put(httpUpperCase = new URL("HTTP://httpUpperCase.com/"), fileSimpleLinkFound);
+		testPages.put(httpLowerCase = new URL("HTTP://httpLowerCase.com/"), fileSimpleLinkFound);
+		testPages.put(httpMixedCase = new URL("HTTP://httpMixedCase.com/"), fileSimpleLinkFound);
 
+
+		
 		//TODO: End of files 
 	
 	}
@@ -398,6 +409,36 @@ public class TestWebCrawler {
 		fail("Need to add test that link within text not detected");
 	}
 	
+	// TODO: TEST PROTOCOL
+	
+	@Test
+	public void testNonHttpNotSearched()
+	{
+		wc.crawl(ftpOnlyLink,file);
+		assertTrue(HTMLStream.getSearchedURLs().isEmpty());
+	}
+	
+	@Test
+	public void testHttpUpperCaseSearched()
+	{
+		wc.crawl(httpUpperCase,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHttpLowerCaseSearched()
+	{
+		wc.crawl(httpLowerCase,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHttpMixedCaseSearched()
+	{
+		wc.crawl(httpMixedCase,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
 	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
 	@Test(expected=IllegalArgumentException.class) 
@@ -485,6 +526,7 @@ public class TestWebCrawler {
 	 * returns appropriate error if file already exists 
 	 * list is printed properly
 	 * if doesnt have / at end of domain, add it. If alreadyy 3, then trim to last as its a file.
+	 * ok if no links exist
 	 * 
 	 * 
 	 * HTML READING
