@@ -111,7 +111,6 @@ public class TestWebCrawler {
 		testPages.put(tagBasefNotReadIn = new URL("http://tagBasef.com/found"), fileSimpleLinkFound);
 		testPages.put(tagBasNotReadIn = new URL("http://tagBas.com/found"),fileSimpleLinkFound);
 		testPages.put(baseAfterTagAIgnored = new URL("http://baseAfterTagA.com/found"), fileSimpleLinkFound);
-//		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBaseIgnored.com/found"),fileSimpleLinkFound);
 		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBase.com/found"),fileSimpleLinkFound);
 		
 		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
@@ -163,7 +162,7 @@ public class TestWebCrawler {
 	
 	}
 	
-	@AfterClass //use this to delete fioes after test has run to avoid cluttering the program folder
+	@AfterClass //use this to delete files after test has run to avoid cluttering the program folder
 	public static void deleteFiles()
 	{
 
@@ -401,10 +400,10 @@ public class TestWebCrawler {
 	
 	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
-	@Test
+	@Test(expected=IllegalArgumentException.class) 
 	public void testMaxDepth0MaxFiles0error()
 	{
-		fail("Need to add adequate test that errors when depth and breadth both set to zero");
+		wc = new WebCrawler(0,0);
 	}
 	
 	@Test
@@ -423,18 +422,17 @@ public class TestWebCrawler {
 		assertEquals(4,HTMLStream.getSearchedURLs().size());
 	}
 	
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testMaxDepthNegativeIntError()
 	{
 		wc = new WebCrawler(-2,4);
-		fail("Put error expected in here");
 	}
 	
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testMaxFileNegativeIntError()
 	{
 		wc = new WebCrawler(4,-2);
-		fail("Put error expected in here");
+
 	}
 	
 	@Test 
@@ -554,7 +552,7 @@ public class TestWebCrawler {
 	 * 
 	 * INVALID HTML FORMAT
 	 * 
-	 * 
+	 * html protocol case sensitive
 	 * 
 	 * 
 	 */
