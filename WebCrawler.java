@@ -10,7 +10,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 // Good file to test on http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html
 
@@ -88,6 +92,8 @@ public class WebCrawler {
 	int maxLinks = 20; 
 	int maxDepth = 5;
 
+	final Set<String> OPENABLE = new HashSet<String>(Arrays.asList("http"));
+	
 	//Crawl variables - could be put in a different class and run in threads
 	InputStream currentStream;
 	File currentDatabase;
@@ -330,33 +336,40 @@ public class WebCrawler {
 		
 		if (next!=null)
 		{
-		int currentDepth = next.priority;
-		currentURL = next.url;
+			int currentDepth = next.priority;
+			currentURL = next.url;
 
-		URL urlToAdd;
+			URL urlToAdd;
 		
-		System.out.println("Working: " + currentURL.toString());
+			System.out.println("Working: " + currentURL.toString());
 		
-		domainURL = getDomainFromURL(currentURL);
-		baseURL = currentURL.toString();
-		//Apache URL validity checker may be useful here
+			Iterator<String> it = OPENABLE.iterator();
+			boolean canOpen = false;
+			while (it.hasNext() && !canOpen) { if (it.next().equalsIgnoreCase(currentURL.getProtocol())) canOpen = true;}
 		
-			try {
-				currentStream =  HTMLStream.getStream(currentURL);
-				firstLinkFromPageFound = false;
-			} catch (IOException e) {
-				e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
-			}  	
-	       	       
-			while ((maxDepth==0 || currentDepth < maxDepth) && (maxLinks == 0 || linksAdded < maxLinks) && (urlToAdd=getNextURLFromCurrentStream()) != null)
+			if (canOpen)
 			{
-
-				if (!tempURLAlreadyExist(urlToAdd))
-				{
-					if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
-				}
-			}
+				domainURL = getDomainFromURL(currentURL);
+				baseURL = currentURL.toString();
+				//Apache URL validity checker may be useful here
 		
+					try {
+						currentStream =  HTMLStream.getStream(currentURL);
+						firstLinkFromPageFound = false;
+					} catch (IOException e) {
+						e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
+					}  	
+	       	       
+					while ((maxDepth==0 || currentDepth < maxDepth) && (maxLinks == 0 || linksAdded < maxLinks) && (urlToAdd=getNextURLFromCurrentStream()) != null)
+					{
+
+						if (!tempURLAlreadyExist(urlToAdd))
+						{
+							if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+						}
+					}
+			}
+			
 			if (search(currentURL)) addURLToMatchedDatabase(currentURL);
 			setPriorityToZero(currentURL);
 			workNextURL(); 
