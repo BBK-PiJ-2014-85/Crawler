@@ -430,7 +430,9 @@ public class WebCrawler {
 		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
 		while(HTMLread.readUntil(currentStream, '<', '<')) //TODO: not sure what this should stop on, it already returns false at end of file
 		{
+
 				n = currentStream.read();
+
 				if (n==-1) break;
 				char c = (char) n;
 				boolean tagIsBase = false;
@@ -443,23 +445,27 @@ public class WebCrawler {
 					{
 						n = currentStream.read();
 						tagIsBase = Character.isWhitespace((char) n); //tag is only base
+						n = HTMLread.skipSpace(currentStream,'>');
 					}
 				}
 				else if (Character.toLowerCase((char) n) == 'a')
 				{
 					n = currentStream.read();
 					tagIsA = Character.isWhitespace((char) n);
+					n = HTMLread.skipSpace(currentStream,'>');
 				}
 			
+				
+				
 				if (tagIsA || tagIsBase)
 				{
 					boolean noLinkContained=false;
 					boolean baseTagAdded = false;
-					while (n != -1 && (char) n != Character.MIN_VALUE && !noLinkContained && !baseTagAdded)
+					while (n != -1 && (char) n != Character.MIN_VALUE && (char) n != '>' && !noLinkContained && !baseTagAdded) //should parameterise the >
 					{
 						if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
 				
-						n = HTMLread.skipSpace(currentStream,'>');
+
 						if ((char) n == 'h')
 						{
 
@@ -479,9 +485,9 @@ public class WebCrawler {
 								}
 							}
 						}
-						if (n != -1 && (char) n != Character.MIN_VALUE & !baseTagAdded) moveToNextElement('>');
-
-	
+					//}
+						
+					if (n != -1 && (char) n != Character.MIN_VALUE & !baseTagAdded) moveToNextElement('>');
 					}
 				}
 			}			
@@ -609,6 +615,28 @@ public class WebCrawler {
 	
 	private void moveToNextElement(char ch) throws IOException
 	{
+		System.out.println((char) n);
+		while (n != -1 && (char) n != '=' && (char) n != '\'' && (char) n != '"' && !Character.isWhitespace((char) n) && (char) n != ch )  n=currentStream.read();
+		System.out.println((char) n);
+		if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>'); // move on from space to next word
+
+		if ((char) n == '=' || (char) n == '"' || (char) n == '\'') //if have an equals, ' or "" then need to proceed past the next entry
+		{
+			if ((char) n == '=') n = HTMLread.skipSpace(currentStream, '>'); //move equals onto next word
+			
+			if ((char) n == '"'|| (char) n == '\'')
+			{
+				if (HTMLread.readUntil(currentStream,(char) n,'>')) n = HTMLread.skipSpace(currentStream, '>');
+				else n = Character.MIN_VALUE;
+			}
+		}
+		System.out.println((char) n);
+	}
+	
+	/*
+	
+		
+		
 		
 		if (n != -1 && (char) n != '=')
 		{		
@@ -622,7 +650,7 @@ public class WebCrawler {
 		}
 
 		//current point now is either eof, end of tag (>), the start of the next element (should the previous no have had an equals) of the equals
-		
+
 		if ((char) n == '=')
 		{
 			n = HTMLread.skipSpace(currentStream, '<');
@@ -644,7 +672,46 @@ public class WebCrawler {
 			}
 		}
 
-	}
+	}*/
+	
+/*	private void moveToNextElement(char ch) throws IOException
+	{
+		
+		if (n != -1 && (char) n != '=')
+		{		
+			if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
+			else
+			{
+				while (n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+
+				if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
+			}
+		}
+
+		//current point now is either eof, end of tag (>), the start of the next element (should the previous no have had an equals) of the equals
+
+		if ((char) n == '=')
+		{
+			n = HTMLread.skipSpace(currentStream, '<');
+
+			if (n!= -1 && (char) n != Character.MIN_VALUE)
+			{
+				if ((char) n == '"' || (char) n == '\'') 
+				{
+					if (HTMLread.readUntil(currentStream,(char) n,'>')) n = HTMLread.skipSpace(currentStream, '>');
+					else n = Character.MIN_VALUE;
+				}
+				else
+				{
+
+					while (n != -1 && (char) n != '=' && !Character.isWhitespace((char) n)) n = currentStream.read();
+
+					if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>');
+				}
+			}
+		}
+
+	}*/
 	
 	
 	/* Read from the current input stream, seeing if it matches the input string, returning whether it matches.
