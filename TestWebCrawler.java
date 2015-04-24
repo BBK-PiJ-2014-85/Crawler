@@ -97,7 +97,28 @@ public class TestWebCrawler {
 	static URL ftpLink;
 	static File fileFTPLink = new File("ftpLink");
 	static URL ftpOnlyLink, httpUpperCase, httpLowerCase, httpMixedCase;
-//	static File fileFTPOnlyLink = new File("fileFTPOnlyLink");
+
+	//URLs and Files to test href keyword is found properly
+	static URL hrefOutsideTagNotReadIn, hrefAfterTagNotReadIn, hrefInBodyNotReadIn, hrefInWrongTagNotReadIn, hrefUpperCaseNotReadIn, hrefMixedCaseNotReadIn;
+	static File fileHrefOutsideTag = new File("hrefOutsideTag");
+	static File fileHrefAfterTag = new File("hrefAfterTag");
+	static File fileHrefInBody = new File("hrefInBody");
+	static File fileHrefInWrongTag = new File("hrefInWrongTag");
+	static File fileHrefUpperCase = new File("hrefUpperCase");
+	static File fileHrefLowerCase = new File("hrefLowerCase");
+	
+	static URL hrefAfterNullElementReadIn, hrefAfterEqualsElementReadIn, hrefAfterDoubleElementReadIn, hrefAfterSingleElementReadIn;
+	static File fileHrefAfterNullElement = new File("hrefAfterNullElement");
+	static File fileHrefAfterEqualsElement = new File("hrefAfterEqualsElement");
+	static File fileHrefAfterDoubleElement = new File("hrefAfterDoubleElement");
+	static File fileHrefAfterSingleElement = new File("hrefAfterSingleElement");
+	
+	static URL hrefNoErrorEOFDuringReadIn, hrefNoErrorEOFAfterFReadIn, hrefNoErrorEOFAfterEqualsReadIn, hreffNotIncluded, hreNotIncluded;
+	static File fileHrefNoErrorEOFDuring = new File("hrefNoErrorEOFDuring");
+	static File fileHrefNoErrorEOFAfterEnd = new File("hrefNoErrorEOFAfterEnd");
+	static File fileHrefNoErrorEOFAfterEquals = new File("hrefNoErrorEOFAfterEquals");
+	static File fileHreffNotIncluded = new File("hreffNotIncluded");
+	static File fileHreNotIncluded = new File("hreNotIncluded");
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
@@ -167,6 +188,22 @@ public class TestWebCrawler {
 		testPages.put(httpLowerCase = new URL("HTTP://httpLowerCase.com/"), fileSimpleLinkFound);
 		testPages.put(httpMixedCase = new URL("HTTP://httpMixedCase.com/"), fileSimpleLinkFound);
 
+		//Files to test href keyword is found properly
+		addPage(hrefOutsideTagNotReadIn = new URL("http://hrefOutsideTag.com/"),fileHrefOutsideTag," href=http://simpleLinkFound.com/");
+		addPage(hrefAfterTagNotReadIn = new URL("http://hrefAfterTag.com/"),fileHrefAfterTag,"<a></a>  href=http://simpleLinkFound.com/>");
+		addPage(hrefInBodyNotReadIn = new URL("http://hrefInBody.com/"),fileHrefInBody,"<a> href=http://simpleLinkFound.com/</a>");
+		addPage(hrefInWrongTagNotReadIn = new URL("http://hrefInWrongTag.com/"),fileHrefInWrongTag,"<b href=http://simpleLinkFound.com/></b>");
+		addPage(hrefUpperCaseNotReadIn = new URL("http://hrefUpperCase.com/"),fileHrefUpperCase,"<a HREF=http://simpleLinkFound.com/></a>");
+		addPage(hrefMixedCaseNotReadIn = new URL("http://hrefMisxedCase.com/"),fileHrefLowerCase,"<a hReF=http://simpleLinkFound.com/></a>");
+		addPage(hrefAfterNullElementReadIn = new URL("http://hrefAfterNullElement.com/"),fileHrefAfterNullElement,"<a hidden href=http://simpleLinkFound.com/></a>");
+		addPage(hrefAfterEqualsElementReadIn = new URL("http://hrefAfterEqualsElement.com/"),fileHrefAfterEqualsElement,"<a hidden=false href=http://simpleLinkFound.com/></a>");
+		addPage(hrefAfterDoubleElementReadIn = new URL("http://hrefAfterDoubleElement.com/"),fileHrefAfterDoubleElement,"<a hidden=\"false\" href=http://simpleLinkFound.com/></a>");
+		addPage(hrefAfterSingleElementReadIn = new URL("http://hrefAfterSingleElement.com/"),fileHrefAfterSingleElement,"<a hidden='false' href=http://simpleLinkFound.com/></a>");
+		addPage(hrefNoErrorEOFDuringReadIn = new URL("http://hrefNoErrorEOFDuring.com/"),fileHrefNoErrorEOFDuring,"<a hre");
+		addPage(hrefNoErrorEOFAfterFReadIn = new URL("http://hrefNoErrorEOFAfterEnd.com/"),fileHrefNoErrorEOFAfterEnd,"<a href");
+		addPage(hrefNoErrorEOFAfterEqualsReadIn = new URL("http://hrefNoErrorEOFAfterEquals.com/"),fileHrefNoErrorEOFAfterEquals,"<a href=");
+		addPage(hreffNotIncluded = new URL("http://hreffNotIncluded.com/"),fileHreffNotIncluded,"<a hreff=http://simpleLinkFound.com/></a>");
+		addPage(hreNotIncluded = new URL("http://hreNotIncluded.com/"),fileHreNotIncluded,"<a hre=http://simpleLinkFound.com/></a>");
 
 		
 		//TODO: End of files 
@@ -439,6 +476,111 @@ public class TestWebCrawler {
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
 	}
 	
+	// TODO: DETERMINE HREF READ IN PROPERLY
+	
+
+	
+	
+	@Test
+	public void testHrefOutsideTagNotReadIn()
+	{
+		wc.crawl(hrefOutsideTagNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testHrefInBodyNotReadIn()
+	{
+		wc.crawl(hrefInBodyNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefInDifferntTagNotReadIn()
+	{
+		wc.crawl(hrefInWrongTagNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefAfterEndNotReadIn()
+	{
+		wc.crawl(hrefAfterTagNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefUpperCaseNotReadIn()
+	{
+		wc.crawl(hrefUpperCaseNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefMixedCaseNotReadIn()
+	{
+		wc.crawl(hrefMixedCaseNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+
+	@Test
+	public void testHrefFoundAfterNullElement()
+	{
+		wc.crawl(hrefAfterNullElementReadIn,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefFoundAfterEqualsElement()
+	{
+		wc.crawl(hrefAfterEqualsElementReadIn,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefAfterSingleQuoteReadIn()
+	{
+		wc.crawl(hrefAfterSingleElementReadIn,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefAfterDoubleQuoteReadIn()
+	{
+		wc.crawl(hrefAfterDoubleElementReadIn,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testHrefNoErrorIfEOFDuring()
+	{
+		wc.crawl(hrefNoErrorEOFDuringReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testHrefIfEOFAfterF()
+	{
+		wc.crawl(hrefNoErrorEOFAfterFReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testHrefIfEOFAfterEquals()
+	{
+		wc.crawl(hrefNoErrorEOFAfterEqualsReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testHreffNotIncluded()
+	{
+		wc.crawl(hreffNotIncluded,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testHreNotIncluded()
+	{
+		wc.crawl(hreNotIncluded,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
 	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
 	@Test(expected=IllegalArgumentException.class) 
@@ -513,11 +655,6 @@ public class TestWebCrawler {
 	
 	
 	/*
-	 * Create mock class which can set webpages for it to see. I.e., have it return the stream to the WebCrawler. In live, it will use default which will access the site,
-	 * for testing, you can feed it the files. Could be a static class/method, with reset and set functions. Will be left in in live, but wont be set in practice.
-	 * 
-	 * Need method in test to get number of entries, and check if an entry is contained, as a way of determining if output is as expected or not.
-	 * 
 	 * FUNCTIONALITY
 	 * 
 	 * Loops through page properly
@@ -534,23 +671,8 @@ public class TestWebCrawler {
 	 * 	DETERMINE TAG READ IN PROPERLY
 	 	* test not read in if written within text
 	 * 
-	 * PROTOCOL:
-	 * 	-only http:// read
-	 * 	-case insensitve
 	 * 
-	 	* DETERMINE HREF FOUND PROPERLY
-	 	* Only read in for A and Base
-	 	* only lower case found
-	 	* href found if after a null element
-	 	* href found if after an = elemnt
-	 	* href not read in if after >
-	 	* graceful if EOF directly after and within
-	 	* graceful if EOF during middle of base
-	 	* hreff not include
-	 	* hre not included
-	 	* HREF not included
-	 	* hReF not included
-	 * 
+
 	 	* HREF LINK READ PROPERLY
 		* not added if contains >
 		* ok if word after the link
@@ -581,14 +703,12 @@ public class TestWebCrawler {
 	 * assigns duplicate those with an / on the end
 	 * assigns duplicate after relative link made up
 	 * 
+	 * TEST WEBSITE
+	 * 
+	 * -particular cases from the test website checked
+	 * 
 	 * FILE EXISTS
 
-	 * 
-	 * FILE READING
-	 * only http read
-	 * https: not read without error
-	 * file: not read without error
-	 * ftp: not read without error
 	 * 
 	 * SEARCH FUNCTION
 	 * changing this properly limits results
@@ -598,8 +718,7 @@ public class TestWebCrawler {
 	 * build with each constructor to test settings properly
 	 * 
 	 * INVALID HTML FORMAT
-	 * 
-	 * html protocol case sensitive
+
 	 * 
 	 * SEARCH
 	 * 	sucessfully overwrites
