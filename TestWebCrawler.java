@@ -462,7 +462,7 @@ public class TestWebCrawler {
 	{
 		wc = new WebCrawler(4,20);
 		wc.crawl(ftpLink,file);
-		assertEquals(4,HTMLStream.getSearchedURLs().size());
+		assertEquals(3,HTMLStream.getSearchedURLs().size()); //this is 3 rather than 4 as the ftp wont be searched
 		assertTrue(!HTMLStream.getSearchedURLs().contains(linkA2));
 	}
 		
@@ -492,6 +492,10 @@ public class TestWebCrawler {
 	 * 	DETERMINE TAG READ IN PROPERLY
 	 	* test not read in if written within text
 	 * 
+	 * PROTOCOL:
+	 * 	-only http:// read
+	 * 	-case insensitve
+	 * 
 	 	* DETERMINE HREF FOUND PROPERLY
 	 	* Only read in for A and Base
 	 	* only lower case found
@@ -503,6 +507,7 @@ public class TestWebCrawler {
 	 	* hreff not include
 	 	* hre not included
 	 	* HREF not included
+	 	* hReF not included
 	 * 
 	 	* HREF LINK READ PROPERLY
 		* not added if contains >
@@ -554,7 +559,8 @@ public class TestWebCrawler {
 	 * 
 	 * html protocol case sensitive
 	 * 
-	 * 
+	 * SEARCH
+	 * 	sucessfully overwrites
 	 */
 	
 	
