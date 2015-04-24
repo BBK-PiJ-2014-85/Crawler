@@ -120,6 +120,13 @@ public class TestWebCrawler {
 	static File fileHreffNotIncluded = new File("hreffNotIncluded");
 	static File fileHreNotIncluded = new File("hreNotIncluded");
 	
+	static URL hrefWhitespaceInPreviousDoubleQuote, hrefWhitespaceInPreviousSingleQuote, hrefEndPreviousNotReadIn, hrefTwoInSameElement;
+	static File fileHrefWSInPreviousDouble = new File("hrefWSInPreviousDouble");
+	static File fileHrefWSInPreviousSingle = new File("hrefWSInPreviousSingle");
+	static File fileHrefEndPreviousNotReadIn = new File("hrefEndPreviousNotReadIn");
+	static File fileHrefTwoInSameElement = new File("hrefTwoInSameElement");
+	
+	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
 
@@ -205,6 +212,10 @@ public class TestWebCrawler {
 		addPage(hreffNotIncluded = new URL("http://hreffNotIncluded.com/"),fileHreffNotIncluded,"<a hreff=http://simpleLinkFound.com/></a>");
 		addPage(hreNotIncluded = new URL("http://hreNotIncluded.com/"),fileHreNotIncluded,"<a hre=http://simpleLinkFound.com/></a>");
 
+		addPage(hrefWhitespaceInPreviousDoubleQuote = new URL("http://hrefWSInPreviousDouble.com/"),fileHrefWSInPreviousDouble,"<a word=\" href=http://linkA.com\" href=http://simpleLinkFound.com/></a>");
+		addPage(hrefWhitespaceInPreviousSingleQuote = new URL("http://hrefWSInPreviousSingle.com/"),fileHrefWSInPreviousSingle,"<a word=' href=http://linkA.com' href=http://simpleLinkFound.com/></a>");
+		addPage(hrefEndPreviousNotReadIn = new URL("http://hrefEndPreviousNotReadIn.com/"),fileHrefEndPreviousNotReadIn,"<a word='>' href=http://simpleLinkFound.com/></a>");
+		addPage(hrefTwoInSameElement = new URL("http://hrefTwoInSameElement.com/"),fileHrefTwoInSameElement,"<a href=http://simpleLinkFound.com/ href=http://linkA.com></a>");
 		
 		//TODO: End of files 
 	
@@ -478,9 +489,6 @@ public class TestWebCrawler {
 	
 	// TODO: DETERMINE HREF READ IN PROPERLY
 	
-
-	
-	
 	@Test
 	public void testHrefOutsideTagNotReadIn()
 	{
@@ -580,6 +588,35 @@ public class TestWebCrawler {
 		wc.crawl(hreNotIncluded,file);
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
 	}
+	@Test
+	public void testHrefWhitespaceInPreviousDoubleQuotes()
+	{
+		wc.crawl(hrefWhitespaceInPreviousDoubleQuote,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	@Test
+	public void testHrefWhitespaceInPreviousSingleQuotes()
+	{
+		wc.crawl(hrefWhitespaceInPreviousSingleQuote,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	@Test
+	public void testHrefEndPreviousNotReadIn()
+	{
+		wc.crawl(hrefEndPreviousNotReadIn,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testOnlyFirstHrefReadIn()
+	{
+		wc.crawl(hrefTwoInSameElement,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
+	}
+	
+
 	
 	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
@@ -674,7 +711,7 @@ public class TestWebCrawler {
 	 * 
 
 	 	* HREF LINK READ PROPERLY
-		* not added if contains >
+		* not added if contains > within quotes part
 		* ok if word after the link
 		* ok if > directly after it
 		* ok if whitesapce directly after it
@@ -686,6 +723,7 @@ public class TestWebCrawler {
 		* doesnt add link if URL is invalid, and acts graceful
 		* only first href added
 		* graceful if EOF interupt for all 3 types - none should be added as no close
+
 	 *  
 		* LINK FORMED PROPERLY
 		* # removed properly
