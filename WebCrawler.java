@@ -78,6 +78,7 @@ import java.util.Comparator;
  * - only reads in base if it is before the first a, and base can only be read in once.
  * -mention defaults for max links and mex depth
  * doesnt matter if tag isnt closed. Idea is to assume webpage has legitimate html, but rather than validate it, read in the intention
+ * - negative values not allowed for max depth or file search limit. zero means it doesnt search by this
  */
 
 public class WebCrawler {
@@ -347,7 +348,7 @@ public class WebCrawler {
 				e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
 			}  	
 	       	       
-			while (currentDepth < maxDepth && linksAdded < maxLinks && (urlToAdd=getNextURLFromCurrentStream()) != null)
+			while ((maxDepth==0 || currentDepth < maxDepth) && (maxLinks == 0 || linksAdded < maxLinks) && (urlToAdd=getNextURLFromCurrentStream()) != null)
 			{
 
 				if (!tempURLAlreadyExist(urlToAdd))
