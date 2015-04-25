@@ -126,6 +126,27 @@ public class TestWebCrawler {
 	static File fileHrefEndPreviousNotReadIn = new File("hrefEndPreviousNotReadIn");
 	static File fileHrefTwoInSameElement = new File("hrefTwoInSameElement");
 	
+	//URLs and file to test href link functionality
+	
+	static URL linkWithEOFBeforeClosedWithTagWhenQuotes, linkEOFBeforeCloseQuote, linkWithTagClosedBeforeEndQuotes, linkEOFBeforeClosedTag, linkWithWordAfter, linkWhitespaceThenWord;
+	static File fileLinkWithEOFBeforeClosedWithTagWhenQuotes = new File("linkWithEOFBeforeClosedWithTagWhenQuotes");
+	static File fileLinkEOFBeforeCloseQuote = new File("linkEOFBeforeCloseQuote");
+	static File fileLinkTagBeforeCloseQuote = new File("linkTagBeforeCloseQuote");
+	static File fileLinkWithWordAfter = new File("linkWithWordAfter");
+	static File fileLinkEOFBeforeClosedTag = new File("linkEOFBeforeClosedTag");
+	static File fileLinkWhitespaceThenWord = new File("linkWhitespaceThenWord");
+	
+	static URL linkWhitespaceThenSingleQuotes, linkWhitespaceThenDoubleQuotes, linkWordCloseTagAfter, linkQuoteCloseTagAfter, linkWordAfterEmptyHref;
+	static File fileLinkWhitespaceThenSingleQuotes = new File("linkWhitespaceThenSingleQuotes");
+	static File fileLinkWhitespaceThenDoubleQuotes = new File("linkWhitespaceThenDoubleQuotes");
+	static File fileLinkWordCloseTagAfter = new File("linkWordCloseTagAfter");
+	static File fileLinkQuoteCloseTagAfter = new File("linkQuoteCloseTagAfter");
+	static File fileLinkWordAfterNullHref = new File("linkWordAfterNullHref");
+
+	static URL linkWordAfterNullHref, linkEmpty, linkNull;
+	static File fileLinkWordAfterEmptyHref = new File("linkWordAfterEmptyHref");
+	static File fileLinkEmpty = new File("linkEmpty");
+	static File fileLinkNull = new File("lileLinkNull");	
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
@@ -216,6 +237,22 @@ public class TestWebCrawler {
 		addPage(hrefWhitespaceInPreviousSingleQuote = new URL("http://hrefWSInPreviousSingle.com/"),fileHrefWSInPreviousSingle,"<a word=' href=http://linkA.com' href=http://simpleLinkFound.com/></a>");
 		addPage(hrefEndPreviousNotReadIn = new URL("http://hrefEndPreviousNotReadIn.com/"),fileHrefEndPreviousNotReadIn,"<a word='>' href=http://simpleLinkFound.com/></a>");
 		addPage(hrefTwoInSameElement = new URL("http://hrefTwoInSameElement.com/"),fileHrefTwoInSameElement,"<a href=http://simpleLinkFound.com/ href=http://linkA.com></a>");
+		
+		//Files to check href link functionality
+		addPage(linkWithEOFBeforeClosedWithTagWhenQuotes = new URL("http://linkWithEOFBeforeClosedWithTagWhenQuotes.com/"),fileLinkWithEOFBeforeClosedWithTagWhenQuotes,"<a href='http://simpleLinkFound.com");
+		addPage(linkEOFBeforeCloseQuote = new URL("http://linkEOFBeforeCloseQuote.com/"),fileLinkEOFBeforeCloseQuote,"<a href='http://simpleLinkFoun");
+		addPage(linkWithTagClosedBeforeEndQuotes = new URL("http://linkWithTagClosedBeforeEndQuotes.com/"),fileLinkTagBeforeCloseQuote,"<a href='http://simpleLink>Found'");
+		addPage(linkEOFBeforeClosedTag = new URL("http://linkEOFBeforeCloseQuote.com/"),fileLinkEOFBeforeClosedTag,"<a href=http://simpleLinkFoun");
+		addPage(linkWithWordAfter = new URL("http://linkWithWordAfter.com/"),fileLinkWithWordAfter,"<a href='http://simpleLinkFound.com/' hidden>");
+		addPage(linkWhitespaceThenWord = new URL("http://linkWhitespaceThenWord.com/"),fileLinkWhitespaceThenWord,"<a href=    http://simpleLinkFound.com/>");
+		addPage(linkWhitespaceThenSingleQuotes = new URL("http://linkWhitespaceThenSingleQuotes.com/"),fileLinkWhitespaceThenSingleQuotes,"<a href=    'http://simpleLinkFound.com/>'");
+		addPage(linkWhitespaceThenDoubleQuotes = new URL("http://linkWhitespaceThenDoubleQuotes.com/"),fileLinkWhitespaceThenDoubleQuotes,"<a href=    \"http://simpleLinkFound.com/>\"");
+		addPage(linkWordCloseTagAfter = new URL("http://linkWordCloseTagAfter.com/"),fileLinkWordCloseTagAfter,"<a href=http://simpleLinkFound.com/>");
+		addPage(linkQuoteCloseTagAfter = new URL("http://linkQuoteCloseTagAfter.com/"),fileLinkQuoteCloseTagAfter,"<a 'href=http://simpleLinkFound.com/>'");
+		addPage(linkWordAfterEmptyHref = new URL("http://linkWordAfterEmptyHref.com/"),fileLinkWordAfterEmptyHref,"<a href='' 'href=http://simpleLinkFound.com/>'");
+		addPage(linkWordAfterNullHref = new URL("http://linkWordAfterNullHref.com/"),fileLinkWordAfterNullHref,"<a href 'href=http://simpleLinkFound.com/>'");
+		addPage(linkEmpty = new URL("http://linkEmpty.com/"),fileLinkEmpty,"<a href=''");
+		addPage(linkNull = new URL("http://linkNull.com/"),fileLinkNull,"<a href>");
 		
 		//TODO: End of files 
 	
@@ -615,8 +652,94 @@ public class TestWebCrawler {
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
 		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 	}
-	
 
+	//TODO: HREF LINK FUNCTIONALITY
+	
+	@Test
+	public void testLinkAddedIfEOFEndNoTagWhenQuotes()
+	{
+		wc.crawl(linkWithEOFBeforeClosedWithTagWhenQuotes,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkNotAddedIfEOFEndBeforeEndQuotes()
+	{
+		wc.crawl(linkEOFBeforeCloseQuote,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkNotAddedIfTagClosedBeforeEndQuotes()
+	{
+		wc.crawl(linkWithTagClosedBeforeEndQuotes,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkNotAddedWhenEOFNoQuotes()
+	{
+		wc.crawl(linkEOFBeforeClosedTag,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkWhenWordAfter()
+	{
+		wc.crawl(linkWithWordAfter,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkAddedWhitespaceThenWord()
+	{
+		wc.crawl(linkWhitespaceThenWord,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkAddedWhitespaceThenSingleQuotes()
+	{
+		wc.crawl(linkWhitespaceThenSingleQuotes,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkAddedWhitespaceThenDoubleQuotes()
+	{
+		wc.crawl(linkWhitespaceThenDoubleQuotes,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkAddedWhenCloseDirectlyAfterNoQuotes()
+	{
+		wc.crawl(linkWordCloseTagAfter,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkAddedWhenCloseDirectlyAfterQuotes()
+	{
+		wc.crawl(linkQuoteCloseTagAfter,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testLinkNotAddedAfterEmptyHref()
+	{
+		wc.crawl(linkWordAfterEmptyHref,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testNullLinkBeforeHref()
+	{
+		wc.crawl(linkWordAfterNullHref,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testEmptyLink()
+	{
+		wc.crawl(linkEmpty,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testNullLink()
+	{
+		wc.crawl(linkNull,file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+	}
+	
 	
 	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
