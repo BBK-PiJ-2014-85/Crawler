@@ -363,7 +363,7 @@ public class WebCrawler {
 
 			URL urlToAdd;
 		
-			System.out.println("Working: " + currentURL.toString());
+			System.out.println("Working: " + currentURL.toString() );
 		
 			Iterator<String> it = OPENABLE.iterator();
 			boolean canOpen = false;
@@ -381,7 +381,6 @@ public class WebCrawler {
 					} catch (IOException e) {
 						e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
 					}  	
-	       	       
 					while ((maxDepth==0 || currentDepth < maxDepth) && (maxLinks == 0 || linksAdded < maxLinks) && (urlToAdd=getNextURLFromCurrentStream()) != null)
 					{
 
@@ -440,7 +439,6 @@ public class WebCrawler {
 		{
 
 				n = currentStream.read();
-
 				if (n==-1) break;
 				char c = (char) n;
 				boolean tagIsBase = false;
@@ -471,7 +469,7 @@ public class WebCrawler {
 					boolean baseTagAdded = false;
 
 					if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
-
+				
 					
 					while (n != -1 && (char) n != Character.MIN_VALUE && (char) n != '>' && !noLinkContained && !baseTagAdded) //should parameterise the >
 					{
