@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileSystemAlreadyExistsException;
@@ -207,7 +208,7 @@ public class TestWebCrawler {
 
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
-
+	static Map<URL, Integer> testResponses = new HashMap<URL,Integer>();
 
 
 
@@ -217,10 +218,15 @@ public class TestWebCrawler {
 	{
 		addPage(simpleLinkFound = new URL("http://simpleLinkFound.com/"),fileSimpleLinkFound,"Link was followed");
 		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
+		testResponses.put(simpleBaseLinkFound,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(tagBasefNotReadIn = new URL("http://tagBasef.com/found"), fileSimpleLinkFound);
+		testResponses.put(tagBasefNotReadIn,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(tagBasNotReadIn = new URL("http://tagBas.com/found"),fileSimpleLinkFound);
+		testResponses.put(tagBasNotReadIn,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(baseAfterTagAIgnored = new URL("http://baseAfterTagA.com/found"), fileSimpleLinkFound);
+		testResponses.put(baseAfterTagAIgnored,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(baseAfterEmptyBaseIgnored = new URL("http://baseAfterEmptyBase.com/found"),fileSimpleLinkFound);
+		testResponses.put(baseAfterEmptyBaseIgnored,HttpURLConnection.HTTP_ACCEPTED);
 		
 		addPage(littleA = new URL("http://littleA.com/"),fileLittleA,"<a href=http://simpleLinkFound.com/>");
 		addPage(bigA = new URL("http://bigA.com/"),fileBigA,"<A href=http://simpleLinkFound.com/>");
@@ -257,22 +263,35 @@ public class TestWebCrawler {
 		addPage(threeLinksB = new URL("http://linkB.com/"),fileThreeLinksB, "<a href=http://linkB1.com/></a><a href=http://linkB2.com/></a><a href=http://linkB3.com/></a>");
 		addPage(threeLinksC = new URL("http://linkC.com/"),fileThreeLinksC, "<a href=http://linkC1.com/></a><a href=http://linkC2.com/></a><a href=http://linkC3.com/></a>");
 		testPages.put(linkA1 = new URL("http://linkA1.com/"), fileSimpleLinkFound);
+		testResponses.put(linkA1,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkA2 = new URL("http://linkA2.com/"), fileSimpleLinkFound);
+		testResponses.put(linkA2,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkA3 = new URL("http://linkA3.com/"), fileSimpleLinkFound);
+		testResponses.put(linkA3,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkB1 = new URL("http://linkB1.com/"), fileSimpleLinkFound);
+		testResponses.put(linkB1,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkB2 = new URL("http://linkB2.com/"), fileSimpleLinkFound);
+		testResponses.put(linkB2,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkB3 = new URL("http://linkB3.com/"), fileSimpleLinkFound);
+		testResponses.put(linkB3,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkC1 = new URL("http://linkC1.com/"), fileSimpleLinkFound);
+		testResponses.put(linkC1,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkC2 = new URL("http://linkC2.com/"), fileSimpleLinkFound);
+		testResponses.put(linkC2,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(linkC3 = new URL("http://linkC3.com/"), fileSimpleLinkFound);
+		testResponses.put(linkC3,HttpURLConnection.HTTP_ACCEPTED);
 		addPage(ftpLink = new URL("http://ftpLink.com/"), fileFTPLink, "<a href=http://linkA.com/></a><a href=ftp://linkB.com/>");
 		
 		//Files to test http only is searched
 		
 		testPages.put(ftpOnlyLink = new URL("ftp://ftpOnlyLink.com/"), fileSimpleLinkFound);
+		testResponses.put(ftpOnlyLink,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(httpUpperCase = new URL("HTTP://httpUpperCase.com/"), fileSimpleLinkFound);
+		testResponses.put(httpUpperCase,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(httpLowerCase = new URL("HTTP://httpLowerCase.com/"), fileSimpleLinkFound);
+		testResponses.put(httpLowerCase,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(httpMixedCase = new URL("HTTP://httpMixedCase.com/"), fileSimpleLinkFound);
+		testResponses.put(httpMixedCase,HttpURLConnection.HTTP_ACCEPTED);
 
 		//Files to test href keyword is found properly
 		addPage(hrefOutsideTagNotReadIn = new URL("http://hrefOutsideTag.com/"),fileHrefOutsideTag," href=http://simpleLinkFound.com/");
@@ -338,14 +357,23 @@ public class TestWebCrawler {
 		addPage(p22 = new URL("http://a/b/c/p22"),fileP22,"<a href=../../>");
 		addPage(p23 = new URL("http://a/b/c/p23"),fileP23,"<a href=../../g>");
 		testPages.put(p1a = new URL("http://a/b/c/g"),fileSimpleLinkFound);
+		testResponses.put(p1a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p3a = new URL("http://a/b/c/g/"),fileSimpleLinkFound);
+		testResponses.put(p3a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p4a = new URL("http://a/g"),fileSimpleLinkFound);
+		testResponses.put(p4a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p5a = new URL("http://g/"),fileSimpleLinkFound);
+		testResponses.put(p5a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p16a = new URL("http://a/b/c/"),fileSimpleLinkFound);
+		testResponses.put(p16a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p18a = new URL("http://a/b/"),fileSimpleLinkFound);
+		testResponses.put(p18a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p20a = new URL("http://a/b/g"),fileSimpleLinkFound);
+		testResponses.put(p20a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p21a = new URL("http://a/"),fileSimpleLinkFound);
+		testResponses.put(p21a,HttpURLConnection.HTTP_ACCEPTED);
 		testPages.put(p23a = new URL("http://a/g"),fileSimpleLinkFound);
+		testResponses.put(p23a,HttpURLConnection.HTTP_ACCEPTED);
 		
 		
 		// Add check for default breadth and depth of files
@@ -356,6 +384,7 @@ public class TestWebCrawler {
 			String http="http://breadth"+ i + ".com/";
 			breadth +="<a href="+http+ "></a>";
 			testPages.put(new URL(http),fileSimpleLinkFound);
+			testResponses.put(new URL(http),HttpURLConnection.HTTP_ACCEPTED);
 		}
 
 		addPage(defaultMaxFile = new URL("http://defaultMaxFile.com/"),fileDefaultMaxFile,breadth);
@@ -377,13 +406,16 @@ public class TestWebCrawler {
 			addPage(dupDomainSlash = new URL("http://dupDomainSlash.com/"),fileDupDomainSlash,"<a href=http://dupDomainSlash.com></a>");
 			addPage(dupNotIncreaseCount = new URL("http://dupNotIncreaseCount.com/"),fileDupNotIncreaseCount,"<a href=http://dupNotIncreaseCount.com/></a><a href=http://simpleLinkFound.com/>");
 			testPages.put(dup1 = new URL("http://duplicate.com/dup"),fileSimpleLinkFound);
+			testResponses.put(dup1,HttpURLConnection.HTTP_ACCEPTED);
 			testPages.put(dup2 = new URL("http://duplicate.com/dup/"),fileSimpleLinkFound);
+			testResponses.put(dup2,HttpURLConnection.HTTP_ACCEPTED);
 			addPage(dupEndSlashNotDomainNotSame= new URL("http://dupSlashNotEndNotSame.com/"),fileDupEndSlahNotDomainNotSame,"<a href=http://duplicate.com/dup/></a><a href=http://duplicate.com/dup>");
 			testPages.put(dupParse1 = new URL("http://dupParse.com/dup/first/second"),fileSimpleLinkFound);
+			testResponses.put(dupParse1,HttpURLConnection.HTTP_ACCEPTED);
 			addPage(dupParsed= new URL("http://dupParse.com/dup/first/word"),fileDupParse,"<a href=http://dupParse.com/dup/first/second></a><a href=second></a>");
 			addPage(simpleDupCSPath= new URL("http://simpleDupCSPath.com/"),fileSimpleDupCSPath,"<a href=http://duplicate.com/dup/></a><a href=http://duplicate.com/duP/>");
 			testPages.put(new URL("http://duplicate.com/duP/"),fileSimpleLinkFound);
-
+			testResponses.put(new URL("http://duplicate.com/duP/"),HttpURLConnection.HTTP_ACCEPTED);
 		
 		//TODO: End of files 
 	
@@ -399,7 +431,10 @@ public class TestWebCrawler {
 	{
 		setBody(pageFile,pageContent);
 		testPages.put(pageName, pageFile);
+		testResponses.put(pageName, HttpURLConnection.HTTP_ACCEPTED);
 	}
+	
+	
 	
 	private static void setBody(File file, String body) throws IOException
 	{
@@ -426,7 +461,7 @@ public class TestWebCrawler {
 					}
 			}	
 			
-			
+			sc.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -439,7 +474,7 @@ public class TestWebCrawler {
 	public void cleanStart() throws MalformedURLException
 	{
 		HTMLStream.reset();
-		HTMLStream.addTestURLs(testPages);
+		HTMLStream.addTestURLs(testPages, testResponses);
 		
 		if (file.exists()) file.delete();
 	
@@ -447,13 +482,6 @@ public class TestWebCrawler {
 	}
 	
 	// TODO: TEST FUNCTIONALITY
-	
-	/*@Test
-	public void testthreeB() throws MalformedURLException, IOException
-	{
-		InputStream is = HTMLStream.getStream(new URL("http://linkB.com/"));
-		for (int i=1; i<60; i++ ) System.out.print((char) is.read());
-	}*/
 	
 	@Test
 	public void testBreadthFirst()
