@@ -148,6 +148,34 @@ public class TestWebCrawler {
 	static File fileLinkEmpty = new File("linkEmpty");
 	static File fileLinkNull = new File("lileLinkNull");	
 	
+	//URLs and Files to check parsing links properly
+	
+	static URL p1, p1a, p2, p3, p3a, p4, p4a, p5, p5a, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p16a, p17, p18,p18a, p19, p20, p20a, p21, p21a, p22, p23, p23a;
+	static File fileP1 = new File("p1");
+	static File fileP2 = new File("p2");
+	static File fileP3 = new File("p3");
+	static File fileP4 = new File("p4");
+	static File fileP5 = new File("p5");
+	static File fileP6 = new File("p6");
+	static File fileP7 = new File("p7");
+	static File fileP8 = new File("p8");
+	static File fileP9 = new File("p9");
+	static File fileP10 = new File("p10");
+	static File fileP11 = new File("p11");
+	static File fileP12 = new File("p12");
+	static File fileP13 = new File("p13");
+	static File fileP14 = new File("p14");
+	static File fileP15 = new File("p15");
+	static File fileP16 = new File("p16");
+	static File fileP17 = new File("p17");
+	static File fileP18 = new File("p18");
+	static File fileP19 = new File("p19");
+	static File fileP20 = new File("p20");
+	static File fileP21 = new File("p21");
+	static File fileP22 = new File("p22");
+	static File fileP23 = new File("p23");
+	
+	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
 
@@ -253,6 +281,41 @@ public class TestWebCrawler {
 		addPage(linkWordAfterNullHref = new URL("http://linkWordAfterNullHref.com/"),fileLinkWordAfterNullHref,"<a href 'href=http://simpleLinkFound.com/>'");
 		addPage(linkEmpty = new URL("http://linkEmpty.com/"),fileLinkEmpty,"<a href=''");
 		addPage(linkNull = new URL("http://linkNull.com/"),fileLinkNull,"<a href>");
+		
+		//Files to check link parsing as outlined in w3.org
+		
+		addPage(p1 = new URL("http://a/b/c/p1"),fileP1,"<a href=g>");
+		addPage(p2 = new URL("http://a/b/c/p2"),fileP2,"<a href=./g>");
+		addPage(p3 = new URL("http://a/b/c/p3"),fileP3,"<a href=g/>");
+		addPage(p4 = new URL("http://a/b/c/p4"),fileP4,"<a href=/g>");
+		addPage(p5 = new URL("http://a/b/c/p5"),fileP5,"<a href=//g>");
+		addPage(p6 = new URL("http://a/b/c/p6"),fileP6,"<a href=?y>");
+		addPage(p7 = new URL("http://a/b/c/p7"),fileP7,"<a href=g?y>");
+		addPage(p8 = new URL("http://a/b/c/p8"),fileP8,"<a href=g?y/./x>");
+		addPage(p9 = new URL("http://a/b/c/p9"),fileP9,"<a href=#s>");
+		addPage(p10 = new URL("http://a/b/c/p10"),fileP10,"<a href=g#s>");
+		addPage(p11 = new URL("http://a/b/c/p11"),fileP11,"<a href=g#s/./x >");
+		addPage(p12 = new URL("http://a/b/c/p12"),fileP12,"<a href=g?y#s>");
+		addPage(p13 = new URL("http://a/b/c/p13"),fileP13,"<a href=;x>");
+		addPage(p14 = new URL("http://a/b/c/p14"),fileP14,"<a href=g;x>");
+		addPage(p15 = new URL("http://a/b/c/p15"),fileP15,"<a href=g;x?y#s>");
+		addPage(p16 = new URL("http://a/b/c/p16"),fileP16,"<a href=.");
+		addPage(p17 = new URL("http://a/b/c/p17"),fileP17,"<a href=./");
+		addPage(p18 = new URL("http://a/b/c/p18"),fileP18,"<a href=..");
+		addPage(p19 = new URL("http://a/b/c/p19"),fileP19,"<a href=../");
+		addPage(p20 = new URL("http://a/b/c/p20"),fileP20,"<a href=../g");
+		addPage(p21 = new URL("http://a/b/c/p21"),fileP21,"<a href=../..");
+		addPage(p22 = new URL("http://a/b/c/p22"),fileP22,"<a href=../../");
+		addPage(p23 = new URL("http://a/b/c/p23"),fileP23,"<a href=../../g");
+		testPages.put(p1a = new URL("http://a/b/c/g"),fileSimpleLinkFound);
+		testPages.put(p3a = new URL("http://a/b/c/g/"),fileSimpleLinkFound);
+		testPages.put(p4a = new URL("http://a/g"),fileSimpleLinkFound);
+		testPages.put(p5a = new URL("http://g"),fileSimpleLinkFound);
+		testPages.put(p16a = new URL("http://a/b/c/"),fileSimpleLinkFound);
+		testPages.put(p18a = new URL("http://a/b/"),fileSimpleLinkFound);
+		testPages.put(p20a = new URL("http://a/b/g"),fileSimpleLinkFound);
+		testPages.put(p21a = new URL("http://a/"),fileSimpleLinkFound);
+		testPages.put(p23a = new URL("http://a/g"),fileSimpleLinkFound);
 		
 		//TODO: End of files 
 	
@@ -740,6 +803,187 @@ public class TestWebCrawler {
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
 	}
 	
+	//TODO: TEST FORMING OF ABSOLUTE AND RELATIVE PATHS
+	
+	
+
+
+
+
+	
+	@Test 	// 		g = <URL:http://a/b/c/g>
+	public void testParse1()
+	{
+		wc.crawl(p1, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+	}
+     @Test//	./g = <URL:http://a/b/c/g>
+ 	public void testParse2()
+ 	{
+ 		wc.crawl(p2, file);
+ 		assertEquals(2,HTMLStream.getSearchedURLs().size());
+ 		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+ 	}
+     @Test//	g/ = <URL:http://a/b/c/g/>
+  	public void testParse3()
+  	{
+  		wc.crawl(p3, file);
+  		assertEquals(2,HTMLStream.getSearchedURLs().size());
+  		assertTrue(HTMLStream.getSearchedURLs().contains(p3a));
+  	}
+     @Test//	/g = <URL:http://a/g>
+   	public void testParse4()
+   	{
+   		wc.crawl(p4, file);
+   		assertEquals(2,HTMLStream.getSearchedURLs().size());
+   		assertTrue(HTMLStream.getSearchedURLs().contains(p4a));
+   	}
+     @Test//	 //g = <URL:http://g>
+   	public void testParse5()
+    	{
+    		wc.crawl(p5, file);
+    		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p5a));
+    	}
+     @Test// ?y         = <URL:http://a/b/c/d;p?y>
+    public void testParse6()
+ 	{
+ 		wc.crawl(p6, file);
+ 		assertEquals(1,HTMLStream.getSearchedURLs().size());
+ 	}
+     //	g?y        = <URL:http://a/b/c/g?y>
+    // g?y        = <URL:http://a/b/c/g?y>
+     @Test public void testParse7()
+  	{
+  		wc.crawl(p7, file);
+  		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+  	}
+     //	g?y/./x    = <URL:http://a/b/c/g?y/./x>
+     //	g?y/./x = <URL:http://a/b/c/g?y/./x>
+     @Test public void testParse8()
+  	{
+  		wc.crawl(p8, file);
+  		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+  	}
+     //	   #s         = <URL:http://a/b/c/d;p?q#s>
+     //	#s = <URL:http://a/b/c/d;p?q#s>
+     @Test public void testParse9()
+   	{
+   		wc.crawl(p9, file);
+   		assertEquals(1,HTMLStream.getSearchedURLs().size());
+   	}
+     //	   g#s        = <URL:http://a/b/c/g#s>
+     //	g#s = <URL:http://a/b/c/g#s>
+     @Test public void testParse10()
+   	{
+   		wc.crawl(p10, file);
+   		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+   	}
+     //	   g#s/./x    = <URL:http://a/b/c/g#s/./x>
+     //g#s/./x    = <URL:http://a/b/c/g#s/./x>
+     @Test public void testParse11()
+    	{
+       		wc.crawl(p11, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+       	}
+     //	 g?y#s      = <URL:http://a/b/c/g?y#s>
+     //g?y#s      = <URL:http://a/b/c/g?y#s>
+    @Test public void testParse12()
+ 	{
+    		wc.crawl(p12, file);
+    		assertEquals(2,HTMLStream.getSearchedURLs().size());
+ 		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+    }
+    //	;x= <URL:http://a/b/c/d;x>
+     // ;x         = <URL:http://a/b/c/d;x>
+     @Test public void testParse13()
+ 	{
+    		wc.crawl(p13, file);
+    		assertEquals(1,HTMLStream.getSearchedURLs().size());
+    	}
+     //	g;x        = <URL:http://a/b/c/g;x>
+     // g;x        = <URL:http://a/b/c/g;x>
+     @Test public void testParse14()
+  	{
+     		wc.crawl(p14, file);
+     		assertEquals(2,HTMLStream.getSearchedURLs().size());
+  		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+     }
+     //			    g;x?y#s    = <URL:http://a/b/c/g;x?y#s>
+     // g;x?y#s    = <URL:http://a/b/c/g;x?y#s>
+     @Test public void testParse15()
+  	{
+     		wc.crawl(p15, file);
+     		assertEquals(2,HTMLStream.getSearchedURLs().size());
+  		assertTrue(HTMLStream.getSearchedURLs().contains(p1a));
+     }
+     //	.  = <URL:http://a/b/c/>
+     // .          = <URL:http://a/b/c/>
+     @Test public void testParse16()
+   	{
+      		wc.crawl(p16, file);
+      		assertEquals(2,HTMLStream.getSearchedURLs().size());
+   		assertTrue(HTMLStream.getSearchedURLs().contains(p16a));
+      }
+     //		./         = <URL:http://a/b/c/>
+     // ./         = <URL:http://a/b/c/>
+     @Test public void testParse17()
+    	{
+       		wc.crawl(p17, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p16a));
+       }
+     //		.. = <URL:http://a/b/>
+     // ..         = <URL:http://a/b/>
+     @Test public void testParse18()
+    	{
+       		wc.crawl(p18, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p18a));
+       }
+     //		../ = <URL:http://a/b/>
+     // ../        = <URL:http://a/b/>
+     @Test public void testParse19()
+    	{
+       		wc.crawl(p19, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p18a));
+       }
+     //		../g  = <URL:http://a/b/g>
+     // ../g       = <URL:http://a/b/g>
+     @Test public void testParse20()
+    	{
+       		wc.crawl(p20, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p20a));
+       }
+     // ../..      = <URL:http://a/>
+     @Test public void testParse21()
+    	{
+       		wc.crawl(p21, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p21a));
+       }
+     // ../../     = <URL:http://a/>
+     @Test public void testParse22()
+    	{
+       		wc.crawl(p22, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p21a));
+       }
+     // ../../g    = <URL:http://a/g>
+     @Test public void testParse23()
+    	{
+       		wc.crawl(p23, file);
+       		assertEquals(2,HTMLStream.getSearchedURLs().size());
+    		assertTrue(HTMLStream.getSearchedURLs().contains(p23a));
+       }
+
 	
 	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
@@ -831,21 +1075,6 @@ public class TestWebCrawler {
 	 * 	DETERMINE TAG READ IN PROPERLY
 	 	* test not read in if written within text
 	 * 
-	 * 
-
-	 	* HREF LINK READ PROPERLY
-		* not added if contains > within quotes part
-		* ok if word after the link
-		* ok if > directly after it
-		* ok if whitesapce directly after it
-		* reads encapsulated by "" properly
-		* reads encapsualted by '' properly
-		* returns nothing if null (i.e without =)
-		* return nothing if empty ""
-		* returns properly if just a word added
-		* doesnt add link if URL is invalid, and acts graceful
-		* only first href added
-		* graceful if EOF interupt for all 3 types - none should be added as no close
 
 	 *  
 		* LINK FORMED PROPERLY
@@ -900,6 +1129,8 @@ public class TestWebCrawler {
 	 *       
 	 *       Check these
 	 *       
+	 *       current http://a/b/c/d
+	 *       
 	 *       g:h        = <URL:g:h>
       g          = <URL:http://a/b/c/g>
       ./g        = <URL:http://a/b/c/g>
@@ -910,7 +1141,7 @@ public class TestWebCrawler {
       g?y        = <URL:http://a/b/c/g?y>
       g?y/./x    = <URL:http://a/b/c/g?y/./x>
       #s         = <URL:http://a/b/c/d;p?q#s>
-      g#s        = <URL:http://a/b/c/g#s>
+    10  g#s        = <URL:http://a/b/c/g#s>
       g#s/./x    = <URL:http://a/b/c/g#s/./x>
       g?y#s      = <URL:http://a/b/c/g?y#s>
       ;x         = <URL:http://a/b/c/d;x>
