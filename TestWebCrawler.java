@@ -1,16 +1,21 @@
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -175,6 +180,29 @@ public class TestWebCrawler {
 	static File fileP22 = new File("p22");
 	static File fileP23 = new File("p23");
 	
+	//URLs and Files for checking default value set correctly
+	static URL defaultMaxFile;
+	static File fileDefaultMaxFile = new File("defaultMaxFile");
+	static URL d1, d2, d3, d4, d5, d6;
+	static File fileD1 = new File("d1");
+	static File fileD2 = new File("d2");
+	static File fileD3 = new File("d3");
+	static File fileD4 = new File("d4");
+	static File fileD5 = new File("d5");
+	static File fileD6 = new File("d6");
+	
+	//URLs and File for checking duplicates
+	
+	static URL simpleDup,simpleDupSameBase, simpleDupNotCS, dupDomainSlash, dupNotIncreaseCount, dup1, dup2, dupEndSlashNotDomainNotSame, dupParse1, dupParsed;
+	static File fileSimpleDup = new File("simpleDup");
+	static File fileSimpleDupNotCS = new File("simpleDupNotCS");
+	static File fileDupDomainSlash = new File("dupDomainSlash");
+	static File fileDupNotIncreaseCount = new File("dupNotIncreaseCount");
+	static File fileDupEndSlahNotDomainNotSame = new File("dupEndSlahNotDomainNotSame");
+	static File fileDupParse = new File("dupParse");
+	static File fileSimpleDupSameBase = new File("simpleDupSameBase");
+
+	
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
@@ -317,6 +345,43 @@ public class TestWebCrawler {
 		testPages.put(p21a = new URL("http://a/"),fileSimpleLinkFound);
 		testPages.put(p23a = new URL("http://a/g"),fileSimpleLinkFound);
 		
+		
+		// Add check for default breadth and depth of files
+		String breadth = "";
+		int MAX_NUM = 25;
+		for (int i=1; i<=MAX_NUM; i++)
+		{
+			String http="http://b"+ i + ".com/";
+			breadth +="<a href="+http+ "></a>";
+			testPages.put(new URL(http),fileSimpleLinkFound);
+		}
+
+		addPage(defaultMaxFile = new URL("http:defaultMaxFile.com/"),fileDefaultMaxFile,breadth);
+		
+		
+		addPage(d1 = new URL("http://d1.com/"),fileD1,"<a href=http://d2.com/>");
+		addPage(d2 = new URL("http://d2.com/"),fileD2,"<a href=http://d3.com/>");
+		addPage(d3 = new URL("http://d3.com/"),fileD3,"<a href=http://d4.com/>");
+		addPage(d4 = new URL("http://d4.com/"),fileD4,"<a href=http://d5.com/>");
+		addPage(d5 = new URL("http://d5.com/"),fileD5,"<a href=http://d6.com/>");
+		addPage(d6 = new URL("http://d6.com/"),fileD6,"<a href=http://simpleLinkFound.com/>");
+		
+		
+		//Files for duplicate testing
+		
+			addPage(simpleDupSameBase = new URL("http://simpleDupSameBase.com/"),fileSimpleDupSameBase,"<a href=http://simpleDupSameBase.com/></a>");
+			addPage(simpleDup = new URL("http://simpleDup.com/"),fileSimpleDup,"<a href=http://simpleLinkFound.com/></a><a href=http://simpleLinkFound.com/></a>");
+			addPage(simpleDupNotCS = new URL("http://simpleDupNotCS.com/"),fileSimpleDupNotCS,"<a href=http://simpleLinkFound.com/></a><a href=hTtp://simPleLinkFound.cOm/></a>");
+			addPage(dupDomainSlash = new URL("http://dupDomainSlash.com/"),fileDupDomainSlash,"<a href=http://dupDomainSlash.com></a>");
+			addPage(dupNotIncreaseCount = new URL("http://dupNotIncreaseCount.com/"),fileDupNotIncreaseCount,"<a href=http://dupNotIncreaseCount.com/></a><a href=http://simpleLinkFound.com/>");
+			testPages.put(dup1 = new URL("http://duplicate.com/dup"),fileSimpleLinkFound);
+			testPages.put(dup2 = new URL("http://duplicate.com/dup/"),fileSimpleLinkFound);
+			addPage(dupEndSlashNotDomainNotSame= new URL("http://dupSlashNotEndNotSame.com/"),fileDupEndSlahNotDomainNotSame,"<a href=http://duplicate.com/dup/></a><a href=http://duplicate.com/dup>");
+			testPages.put(dupParse1 = new URL("http://dupParse.com/dup/first/second"),fileSimpleLinkFound);
+			addPage(dupParsed= new URL("http://dupParse.com/dup/first/word"),fileDupParse,"<a href=http://dupParse.com/dup/first/second></a><a href=second></a>");
+		
+		
+		
 		//TODO: End of files 
 	
 	}
@@ -340,6 +405,32 @@ public class TestWebCrawler {
 		fw.close();
 	}
 	
+	private static List<URL> getMatchedURLs(File file)
+	{
+		List<URL> rtn = new ArrayList<URL>();		
+		
+		try {
+			Scanner sc = new Scanner(file);
+			
+			while (sc.hasNextLine())
+			{
+				String next = sc.nextLine();
+				if (next.charAt(0) == '"')
+					try {
+						rtn.add(new URL(next.substring(1, next.length() - 1)));
+					} catch (MalformedURLException e) {
+						e.printStackTrace();
+					}
+			}	
+			
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	
+		return rtn;
+	}
+	
 	
 	@Before 
 	public void cleanStart() throws MalformedURLException
@@ -350,6 +441,156 @@ public class TestWebCrawler {
 		if (file.exists()) file.delete();
 	
 		wc = new WebCrawler(); 
+	}
+	
+	// TODO: TEST FUNCTIONALITY
+	
+	@Test
+	public void testBreadthFirst()
+	{
+		wc = new WebCrawler(6,0);
+		wc.crawl(threeLinks, file);
+		assertEquals(6,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(linkA2));	
+		assertFalse(HTMLStream.getSearchedURLs().contains(linkA3));		
+	}
+	
+	@Test(expected=IOException.class) 
+	public void testErrorReturnedIfFileAlreadyExists() throws IOException
+	{
+		file.createNewFile();
+		wc.crawl(simpleLinkFound, file);
+	}
+	
+	@Test
+	public void testNonExistantURLPrintedToConsole() //TODO: Test all of the statuses which can be set. HTMLStream will return a packet containing error instead of a stream
+	{
+		fail();
+	}
+	
+	@Test
+	public void testNonExistantURLFirstURLNoError() //TODO: Same as aboce
+	{
+		fail();
+	}
+	
+	@Test
+	public void testMalformedURLErrorPrinted()
+	{
+		fail();
+	}
+	
+	@Test //Dont need to test default setting of this as covered elsewhere
+	public void testOverwriteSearchFunction() throws MalformedURLException
+	{
+		SearchCriteria ftp = (url) -> (url.getProtocol() == "ftp" ? true: false);
+		wc = new WebCrawler(ftp,5,0);
+		wc.crawl(ftpLink,file);
+		assertEquals(5,HTMLStream.getSearchedURLs().size());
+		List<URL> stored = getMatchedURLs(file);
+		assertEquals(2,stored.size());
+		assertTrue(stored.contains(ftpLink));
+		assertTrue(stored.contains(new URL("ftp://linkB.com/")));
+	}
+	
+	@Test //Dont need to test default setting of this as covered elsewhere
+	public void testOverwriteSearchFunctionSimpleConstructor() throws MalformedURLException
+	{
+		SearchCriteria ftp = (url) -> (url.getProtocol() == "ftp" ? true: false);
+		wc = new WebCrawler(ftp);
+		wc.crawl(ftpLink,file);
+		List<URL> stored = getMatchedURLs(file);
+		assertEquals(2,stored.size());
+		assertTrue(stored.contains(ftpLink));
+		assertTrue(stored.contains(new URL("ftp://linkB.com/")));
+	}
+	
+	@Test
+	public void testDefaultBreadthCorrect()
+	{
+		wc.crawl(defaultMaxFile, file);
+		assertEquals(20,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void testDefaultDepthCorrect()
+	{
+		wc.crawl(d1,file);
+		assertEquals(5,HTMLStream.getSearchedURLs().size());
+	}
+
+	//TODO: DUPLICATES
+	
+	@Test
+	public void testDuplicatesNotSearchedTwice()
+	{		
+		wc.crawl(simpleDup, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertEquals(2,getMatchedURLs(file));
+	}
+	@Test
+	public void testDuplicatesNotSearchedTwiceSameAsBase()
+	{
+
+		
+		wc.crawl(simpleDupSameBase, file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertEquals(1,getMatchedURLs(file));
+	}
+	@Test
+	public void testDuplicatesNotCaseSensitive()
+	{
+		wc.crawl(simpleDupNotCS, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertEquals(2,getMatchedURLs(file));
+	}
+	@Test
+	public void testSlashPutOnEndOfDomainAndDuplicateDetected()
+	{
+		wc.crawl(dupDomainSlash, file);
+		assertEquals(1,HTMLStream.getSearchedURLs().size());
+		assertEquals(1,getMatchedURLs(file));
+	}
+	@Test
+	public void testDuplicateDoesntIncreaseCount()
+	{
+		wc= new WebCrawler(2,0);		
+		wc.crawl(simpleDupSameBase, file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+	}
+	@Test
+	public void testSlashOnEndNotDomainNotSame()
+	{
+		wc.crawl(dupEndSlashNotDomainNotSame, file);
+		assertEquals(3,HTMLStream.getSearchedURLs().size());
+		assertEquals(3,getMatchedURLs(file));
+	}
+	@Test
+	public void testDuplicateDetectedOnParsedLink()
+	{
+		wc.crawl(dupParsed,file);
+		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertEquals(2,getMatchedURLs(file));
+	}
+
+	
+	//TODO: STORING OF RESULTS
+	
+	//Testing that only those matched have been found is done within the change to the default search function
+	
+	@Test
+	public void testOneSiteAdded()
+	{
+		wc.crawl(simpleLinkFound,file);
+		assertEquals(1,getMatchedURLs(file).size());
+	}
+	
+	@Test
+	public void testSitesAddedInBreadthAndDepth()
+	{
+		wc = new WebCrawler(0,3);
+		wc.crawl(threeLinks,file);
+		assertEquals(12,getMatchedURLs(file).size() );
 	}
 	
 	// DETERMINE TAG READ IN PROPERLY
@@ -993,10 +1234,24 @@ public class TestWebCrawler {
 		wc = new WebCrawler(0,0);
 	}
 	
+	@Test(expected=IllegalArgumentException.class) 
+	public void testMaxDepth0MaxFiles0errorFullConstructor()
+	{
+		wc = new WebCrawler((url)->true,0,0);
+	}
+	
 	@Test
 	public void maxDepth0DoesntLimit()
 	{
 		wc = new WebCrawler(5,0);
+		wc.crawl(threeLinks,file);
+		assertEquals(5,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test
+	public void maxDepth0DoesntLimitFullConstructor()
+	{
+		wc = new WebCrawler((url)->true,5,0);
 		wc.crawl(threeLinks,file);
 		assertEquals(5,HTMLStream.getSearchedURLs().size());
 	}
@@ -1009,10 +1264,24 @@ public class TestWebCrawler {
 		assertEquals(4,HTMLStream.getSearchedURLs().size());
 	}
 	
+	@Test
+	public void maxFile0DoesntLimitFullConstructor()
+	{
+		wc = new WebCrawler((url)->true,0,2);
+		wc.crawl(threeLinks,file);
+		assertEquals(4,HTMLStream.getSearchedURLs().size());
+	}
+	
 	@Test(expected=IllegalArgumentException.class)
 	public void testMaxDepthNegativeIntError()
 	{
 		wc = new WebCrawler(-2,4);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testMaxDepthNegativeIntErrorFullConstructor()
+	{
+		wc = new WebCrawler((url)->true,2,4);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -1022,10 +1291,25 @@ public class TestWebCrawler {
 
 	}
 	
+	@Test(expected=IllegalArgumentException.class)
+	public void testMaxFileNegativeIntErrorFullConstructor()
+	{
+		wc = new WebCrawler((url)->true,4,-2);
+
+	}
+	
 	@Test 
 	public void maxDepthLimitAppliedProperly()
 	{
 		wc = new WebCrawler(20,2);
+		wc.crawl(threeLinks,file);
+		assertEquals(4,HTMLStream.getSearchedURLs().size());
+	}
+	
+	@Test 
+	public void maxDepthLimitAppliedProperlyFullConstructor()
+	{
+		wc = new WebCrawler((url)-> true,20,2);
 		wc.crawl(threeLinks,file);
 		assertEquals(4,HTMLStream.getSearchedURLs().size());
 	}
@@ -1039,9 +1323,11 @@ public class TestWebCrawler {
 	}
 	
 	@Test
-	public void checkDefaultMaxDepthAndMaxFilesSetCorrectly()
+	public void maxFileSearchedLimitProperlyFullConstructor()
 	{
-		fail("Set up a test to check the limit is set properly");
+		wc = new WebCrawler((url)->true,3,20);
+		wc.crawl(threeLinks,file);
+		assertEquals(3,HTMLStream.getSearchedURLs().size());
 	}
 	
 	@Test 
@@ -1059,45 +1345,14 @@ public class TestWebCrawler {
 	
 	
 	/*
-	 * FUNCTIONALITY
-	 * 
-	 * Loops through page properly
-	 * Works in appropriate breadth first priority order
-	 * doesn't search ftp's but adds them to list (i.e. only searches http://)
-	 * returns appropriate error if file already exists 
-	 * list is printed properly
-	 * if doesnt have / at end of domain, add it. If alreadyy 3, then trim to last as its a file.
-	 * ok if no links exist
-	 * 
-	 * 
-	 * HTML READING
-	 * 
-	 * 	DETERMINE TAG READ IN PROPERLY
-	 	* test not read in if written within text
+
 	 * 
 
-	 *  
-		* LINK FORMED PROPERLY
-		* # removed properly
-		* test all examples of formulating a link as shown on standards site, including wierd cases
-	 *  
-	 * INVALID URL
-	 * acts graceful when URL provided is invalid 
-	 * acts graceful when link is not found (and still added to file)	
-	 * 
-	 * DUPLICATES
-	 * only adds once
-	 * doesn't add count when found duplicate
-	 * not case sensitive
-	 * only works each entry once
-	 * assigns duplicate those with an / on the end
-	 * assigns duplicate after relative link made up
 	 * 
 	 * TEST WEBSITE
 	 * 
-	 * -particular cases from the test website checked
-	 * 
-	 * FILE EXISTS
+	 * -TODO:particular cases from the test website checked. This remains.
+
 
 	 * 
 	 * SEARCH FUNCTION
