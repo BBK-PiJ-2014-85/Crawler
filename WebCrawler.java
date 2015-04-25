@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileSystemAlreadyExistsException;
@@ -375,12 +376,18 @@ public class WebCrawler {
 				baseURL = currentURL.toString(); //TODO: think this is acutally redundant now
 				//baseURL = trimURLToLastSlash(currentURL).toString();
 		
-					try {
-						currentStream =  HTMLStream.getStream(currentURL);
+				StreamHolder nextStream = HTMLStream.getStream(currentURL);
+				
+				if (nextStream.response != HttpURLConnection.HTTP_ACCEPTED)
+				{
+					System.out.println("Not right...");
+				}
+				else
+				{
+					
+						currentStream =  nextStream.stream;
 						firstLinkFromPageFound = false;
-					} catch (IOException e) {
-						e.printStackTrace();//TODO: may want to handle these better by taking it as a bad link rather than halting the program 
-					}  	
+					
 					while ((maxDepth==0 || currentDepth < maxDepth) && (maxLinks == 0 || linksAdded < maxLinks) && (urlToAdd=getNextURLFromCurrentStream()) != null)
 					{
 
@@ -389,6 +396,7 @@ public class WebCrawler {
 							if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
 						}
 					}
+				}
 			}
 			
 			if (search(currentURL)) addURLToMatchedDatabase(currentURL);
