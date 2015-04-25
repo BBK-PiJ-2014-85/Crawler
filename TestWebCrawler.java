@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileSystemAlreadyExistsException;
@@ -352,12 +353,12 @@ public class TestWebCrawler {
 		int MAX_NUM = 25;
 		for (int i=1; i<=MAX_NUM; i++)
 		{
-			String http="http://b"+ i + ".com/";
+			String http="http://breadth"+ i + ".com/";
 			breadth +="<a href="+http+ "></a>";
 			testPages.put(new URL(http),fileSimpleLinkFound);
 		}
 
-		addPage(defaultMaxFile = new URL("http:defaultMaxFile.com/"),fileDefaultMaxFile,breadth);
+		addPage(defaultMaxFile = new URL("http://defaultMaxFile.com/"),fileDefaultMaxFile,breadth);
 		
 		
 		addPage(d1 = new URL("http://d1.com/"),fileD1,"<a href=http://d2.com/>");
@@ -446,6 +447,13 @@ public class TestWebCrawler {
 	}
 	
 	// TODO: TEST FUNCTIONALITY
+	
+	/*@Test
+	public void testthreeB() throws MalformedURLException, IOException
+	{
+		InputStream is = HTMLStream.getStream(new URL("http://linkB.com/"));
+		for (int i=1; i<60; i++ ) System.out.print((char) is.read());
+	}*/
 	
 	@Test
 	public void testBreadthFirst()
@@ -596,7 +604,7 @@ public class TestWebCrawler {
 	{
 		wc = new WebCrawler(0,3);
 		wc.crawl(threeLinks,file);
-		assertEquals(12,getMatchedURLs(file).size() );
+		assertEquals(13,getMatchedURLs(file).size() );
 	}
 	
 	// DETERMINE TAG READ IN PROPERLY
