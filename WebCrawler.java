@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.FileSystemAlreadyExistsException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -86,6 +87,11 @@ import java.util.Set;
  * -TODO: Could add amehtod to set which protocols it will atmept to open
  * -protocol not case sensitive
  * - href case sensitive
+ * -doesnt check closed tag closed.
+ * -to be added, must nt be an eof right at the end of the word if not in quotes, must close quote if quoted
+ * -ignroes semi colons, ? marks and and hashes as tghese refences different aprts ofa  apge
+ * -malformed URLS and non-existant exceptions are ignored, with only note printed to console. 
+ * -if used http conneciton more would need to be added to stream
  */
 
 public class WebCrawler {
@@ -150,6 +156,8 @@ public class WebCrawler {
 	
 	public void crawl(URL url, File database)
 	{	
+		if (database.exists()) throw new FileSystemAlreadyExistsException();
+		
 		try {
 			database.createNewFile();
 		} catch (IOException e) {
@@ -353,8 +361,8 @@ public class WebCrawler {
 			if (canOpen)
 			{
 				domainURL = getDomainFromURL(currentURL);
-				baseURL = currentURL.toString();
-				//Apache URL validity checker may be useful here
+				baseURL = currentURL.toString(); //TODO: think this is acutally redundant now
+				//baseURL = trimURLToLastSlash(currentURL).toString();
 		
 					try {
 						currentStream =  HTMLStream.getStream(currentURL);
@@ -410,17 +418,6 @@ public class WebCrawler {
 		}
 
 	}
-	/*
-	public URL getNextURLFromCurrentStream(URL url) throws IOException
-	{
-		try {
-			currentStream =  HTMLStream.getStream(url);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	return getNextURLFromCurrentStream();	
-	}*/
 	
 	//return null if there are no urls left
 	public URL getNextURLFromCurrentStream() throws IOException
@@ -548,6 +545,9 @@ public class WebCrawler {
 		
 		stringWithoutParameters = input.substring(0,position); //removing hash as this is a local reference, and ? and ; as this is for parameters to pass to the other address
 		
+		System.out.println("String Without Parameters is: " + stringWithoutParameters);
+		System.out.println("Base URL is: " + baseURL);
+		
 		if (stringWithoutParameters.length() == 0) linkString = baseURL;
 		else if (stringWithoutParameters.contains(":")) linkString = stringWithoutParameters; //String is full reference as includes protocol
 		else if (stringWithoutParameters.length() > 1 && stringWithoutParameters.substring(0,2).equals("./"))
@@ -585,18 +585,18 @@ public class WebCrawler {
 			for (int i = 0; i < baseURL.length() ; i++) if(baseURL.charAt(i) == '/') depthOfBase++;
 			
 			int numToRemove = (count > depthOfBase ? depthOfBase : count);
-			
+			int numRemoved = 0;
 			int basePosition = baseURL.length();
-			while (numToRemove > 0 || baseURL.charAt(basePosition - 1) != '/')
+			while (numToRemove > numRemoved || baseURL.charAt(basePosition - 1) != '/')
 			{
-				if (baseURL.charAt(basePosition - 1) == '/') numToRemove--;
+				if (baseURL.charAt(basePosition - 1) == '/') numRemoved++;
 				basePosition--;
 			}
 			
 			String basePart = baseURL.substring(0, basePosition);
 
 			String linkPart = (stringWithoutParameters.length() < (numToRemove * 3) ? "" : stringWithoutParameters.substring(numToRemove * 3));
-			
+			System.out.println("LinkPart is: " + linkPart);
 			linkString = basePart + linkPart;//specifies at stadards that too many ../ then possible shoudl be added in adress 
 			
 		}
@@ -797,21 +797,21 @@ public class WebCrawler {
         URL test3 = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
        
         
-        /*
+        
         BufferedReader in = new BufferedReader(
         new InputStreamReader(test3.openStream()));  
         String inputLine;
         while ((inputLine = in.readLine()) != null)
             System.out.println(inputLine);
         in.close();
-    	*/
-        
+    	
+        /*
         File file = new File("database.txt");
         if (file.exists()) file.delete();
         
         WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),5,5);
         wc.crawl(test3,file);
-        
+        */
         
     }
 	
