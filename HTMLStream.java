@@ -3,7 +3,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,7 @@ import java.util.Map;
 public class HTMLStream {
 
 	private static Map<URL,File> pages = null;
+	private static Map<URL,Integer> responses = null;
 	private static List<URL> searchedURLs = new ArrayList<URL>();
 	
 /**
@@ -27,7 +30,11 @@ public class HTMLStream {
  * @param testPages the map containing each test URL and the corresponding page to return if it is searched
  */
 	
-	public static void addTestURLs(Map<URL,File> testPages) {pages = testPages;}
+	public static void addTestURLs(Map<URL,File> testPages, Map<URL,Integer> testResponses) 
+	{
+		pages = testPages;
+		responses=testResponses;
+	}
 
 	/**
 	 * Returns the stream from an input URL, either from an http: connection or of a set page should a testing urls have been defined. Should a test database be defined,
@@ -38,14 +45,20 @@ public class HTMLStream {
 	 * @throws IOException
 	 */
 	
-	public static InputStream getStream(URL url) throws IOException
+	public static StreamHolder getStream(URL url) throws IOException
 	{
-		if (pages == null) return url.openStream();
+		StreamHolder rtnObject = new StreamHolder();
+		if (pages == null) {
+			HttpURLConnection c = (HttpURLConnection) url.openConnection();
+			if ((rtnObject.response = c.getResponseCode()) == HttpURLConnection.HTTP_ACCEPTED) rtnObject.stream = url.openStream();
+		}
 		else 
 		{
 			searchedURLs.add(url);
-			return new FileInputStream(pages.get(url));
+			if ((rtnObject.response = responses.get(url)) == HttpURLConnection.HTTP_ACCEPTED) rtnObject.stream = new FileInputStream(pages.get(url));
 		}
+		
+		return rtnObject;
 	}
 	
 	/**
@@ -55,6 +68,7 @@ public class HTMLStream {
 	public static void reset() 
 	{
 		pages=null;
+		responses=null;
 		searchedURLs = new ArrayList<URL>();
 	}
 	
@@ -66,4 +80,5 @@ public class HTMLStream {
 	
 	public static List<URL> getSearchedURLs() {return searchedURLs;}
 	
+
 }
