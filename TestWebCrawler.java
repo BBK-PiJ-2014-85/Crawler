@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.FileSystemAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -253,7 +254,7 @@ public class TestWebCrawler {
 		addPage(threeLinks = new URL("http://threeLinks.com/"),fileThreeLinks, "<a href=http://linkA.com/></a><a href=http://linkB.com/></a><a href=http://linkC.com/></a>");
 		addPage(threeLinksA = new URL("http://linkA.com/"),fileThreeLinksA, "<a href=http://linkA1.com/></a><a href=http://linkA2.com/></a><a href=http://linkA3.com/></a>");
 		addPage(threeLinksB = new URL("http://linkB.com/"),fileThreeLinksB, "<a href=http://linkB1.com/></a><a href=http://linkB2.com/></a><a href=http://linkB3.com/></a>");
-		addPage(threeLinksC = new URL("http://LinkC.com/"),fileThreeLinksC, "<a href=http://linkC1.com/></a><a href=http://linkC2.com/></a><a href=http://linkC3.com/></a>");
+		addPage(threeLinksC = new URL("http://linkC.com/"),fileThreeLinksC, "<a href=http://linkC1.com/></a><a href=http://linkC2.com/></a><a href=http://linkC3.com/></a>");
 		testPages.put(linkA1 = new URL("http://linkA1.com/"), fileSimpleLinkFound);
 		testPages.put(linkA2 = new URL("http://linkA2.com/"), fileSimpleLinkFound);
 		testPages.put(linkA3 = new URL("http://linkA3.com/"), fileSimpleLinkFound);
@@ -301,10 +302,10 @@ public class TestWebCrawler {
 		addPage(linkEOFBeforeClosedTag = new URL("http://linkEOFBeforeCloseQuote.com/"),fileLinkEOFBeforeClosedTag,"<a href=http://simpleLinkFoun");
 		addPage(linkWithWordAfter = new URL("http://linkWithWordAfter.com/"),fileLinkWithWordAfter,"<a href='http://simpleLinkFound.com/' hidden>");
 		addPage(linkWhitespaceThenWord = new URL("http://linkWhitespaceThenWord.com/"),fileLinkWhitespaceThenWord,"<a href=    http://simpleLinkFound.com/>");
-		addPage(linkWhitespaceThenSingleQuotes = new URL("http://linkWhitespaceThenSingleQuotes.com/"),fileLinkWhitespaceThenSingleQuotes,"<a href=    'http://simpleLinkFound.com/>'");
-		addPage(linkWhitespaceThenDoubleQuotes = new URL("http://linkWhitespaceThenDoubleQuotes.com/"),fileLinkWhitespaceThenDoubleQuotes,"<a href=    \"http://simpleLinkFound.com/>\"");
+		addPage(linkWhitespaceThenSingleQuotes = new URL("http://linkWhitespaceThenSingleQuotes.com/"),fileLinkWhitespaceThenSingleQuotes,"<a href=    'http://simpleLinkFound.com/'>");
+		addPage(linkWhitespaceThenDoubleQuotes = new URL("http://linkWhitespaceThenDoubleQuotes.com/"),fileLinkWhitespaceThenDoubleQuotes,"<a href=    \"http://simpleLinkFound.com/\">");
 		addPage(linkWordCloseTagAfter = new URL("http://linkWordCloseTagAfter.com/"),fileLinkWordCloseTagAfter,"<a href=http://simpleLinkFound.com/>");
-		addPage(linkQuoteCloseTagAfter = new URL("http://linkQuoteCloseTagAfter.com/"),fileLinkQuoteCloseTagAfter,"<a 'href=http://simpleLinkFound.com/>'");
+		addPage(linkQuoteCloseTagAfter = new URL("http://linkQuoteCloseTagAfter.com/"),fileLinkQuoteCloseTagAfter,"<a href='http://simpleLinkFound.com/'>");
 		addPage(linkWordAfterEmptyHref = new URL("http://linkWordAfterEmptyHref.com/"),fileLinkWordAfterEmptyHref,"<a href='' 'href=http://simpleLinkFound.com/>'");
 		addPage(linkWordAfterNullHref = new URL("http://linkWordAfterNullHref.com/"),fileLinkWordAfterNullHref,"<a href 'href=http://simpleLinkFound.com/>'");
 		addPage(linkEmpty = new URL("http://linkEmpty.com/"),fileLinkEmpty,"<a href=''");
@@ -455,7 +456,7 @@ public class TestWebCrawler {
 		assertFalse(HTMLStream.getSearchedURLs().contains(linkA3));		
 	}
 	
-	@Test(expected=IOException.class) 
+	@Test(expected=FileSystemAlreadyExistsException.class) 
 	public void testErrorReturnedIfFileAlreadyExists() throws IOException
 	{
 		file.createNewFile();
@@ -483,25 +484,23 @@ public class TestWebCrawler {
 	@Test //Dont need to test default setting of this as covered elsewhere
 	public void testOverwriteSearchFunction() throws MalformedURLException
 	{
-		SearchCriteria ftp = (url) -> (url.getProtocol() == "ftp" ? true: false);
+		SearchCriteria ftp = (url) -> (url.getProtocol().equals("ftp") ? true: false);
 		wc = new WebCrawler(ftp,5,0);
 		wc.crawl(ftpLink,file);
-		assertEquals(5,HTMLStream.getSearchedURLs().size());
+		assertEquals(4,HTMLStream.getSearchedURLs().size()); //expected 4 as one of them is an ftp and so wont be searched.
 		List<URL> stored = getMatchedURLs(file);
-		assertEquals(2,stored.size());
-		assertTrue(stored.contains(ftpLink));
+		assertEquals(1,stored.size());
 		assertTrue(stored.contains(new URL("ftp://linkB.com/")));
 	}
 	
 	@Test //Dont need to test default setting of this as covered elsewhere
 	public void testOverwriteSearchFunctionSimpleConstructor() throws MalformedURLException
 	{
-		SearchCriteria ftp = (url) -> (url.getProtocol() == "ftp" ? true: false);
+		SearchCriteria ftp = (url) -> (url.getProtocol().equals("ftp") ? true: false);
 		wc = new WebCrawler(ftp);
 		wc.crawl(ftpLink,file);
 		List<URL> stored = getMatchedURLs(file);
-		assertEquals(2,stored.size());
-		assertTrue(stored.contains(ftpLink));
+		assertEquals(1,stored.size());
 		assertTrue(stored.contains(new URL("ftp://linkB.com/")));
 	}
 	
@@ -526,37 +525,36 @@ public class TestWebCrawler {
 	{		
 		wc.crawl(simpleDup, file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertEquals(2,getMatchedURLs(file));
+		assertEquals(2,getMatchedURLs(file).size());
 	}
 	@Test
 	public void testDuplicatesNotSearchedTwiceSameAsBase()
 	{
-
-		
 		wc.crawl(simpleDupSameBase, file);
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
-		assertEquals(1,getMatchedURLs(file));
+		assertEquals(1,getMatchedURLs(file).size());
 	}
 	@Test
 	public void testDuplicatesNotCaseSensitive()
 	{
 		wc.crawl(simpleDupNotCS, file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertEquals(2,getMatchedURLs(file));
+		assertEquals(2,getMatchedURLs(file).size());
 	}
 	@Test
 	public void testSlashPutOnEndOfDomainAndDuplicateDetected()
 	{
 		wc.crawl(dupDomainSlash, file);
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
-		assertEquals(1,getMatchedURLs(file));
+		assertEquals(1,getMatchedURLs(file).size());
 	}
 	@Test
 	public void testDuplicateDoesntIncreaseCount()
 	{
 		wc= new WebCrawler(2,0);		
-		wc.crawl(simpleDupSameBase, file);
+		wc.crawl(dupNotIncreaseCount, file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
+		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 	}
 	@Test
 	public void testSlashOnEndNotDomainNotSame()
@@ -570,7 +568,7 @@ public class TestWebCrawler {
 	{
 		wc.crawl(dupParsed,file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
-		assertEquals(2,getMatchedURLs(file));
+		assertEquals(2,getMatchedURLs(file).size());
 	}
 
 	
@@ -790,12 +788,6 @@ public class TestWebCrawler {
 		wc.crawl(baseAfterEmptyBase,file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
 		assertTrue(HTMLStream.getSearchedURLs().contains(baseAfterEmptyBaseIgnored));
-	}
-	
-	@Test
-	public void testTagWithinTextNotFound()
-	{
-		fail("Need to add test that link within text not detected");
 	}
 	
 	// TODO: TEST PROTOCOL
@@ -1281,7 +1273,7 @@ public class TestWebCrawler {
 	@Test(expected=IllegalArgumentException.class)
 	public void testMaxDepthNegativeIntErrorFullConstructor()
 	{
-		wc = new WebCrawler((url)->true,2,4);
+		wc = new WebCrawler((url)->true,-2,4);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
