@@ -92,6 +92,7 @@ import java.util.Set;
  * -ignroes semi colons, ? marks and and hashes as tghese refences different aprts ofa  apge
  * -malformed URLS and non-existant exceptions are ignored, with only note printed to console. 
  * -if used http conneciton more would need to be added to stream
+ * if url with only 2 slashes added, third is placed at end automatically.
  */
 
 public class WebCrawler {
@@ -117,11 +118,14 @@ public class WebCrawler {
 	/* Comparator below defines whether two URLs are deemed duplicate for matches. This is defined as not case sensitive, and if one ends in a forwards slash
 		and the other doesnt, but otherwise they are the same, these are determined to be the same*/
 	//TODO: Do URLs have to end in a /?
+	Comparator<URL> urlMatch = (URL s, URL t) -> { return (s.sameFile(t) ? 0 : 1); }; //TODO: This is a little over the top now if i stick with this.
+											
+		/*									
 	Comparator<String> urlMatch = (s,t) -> {
-												if (s.length() == t.length() + 1 && s.charAt(s.length() - 1) == '/') s = s.substring(0,s.length() - 1);
-												else if (t.length() == s.length() + 1 && t.charAt(t.length() - 1) == '/') t = t.substring(0,t.length() - 1);
-												if (s.equalsIgnoreCase(t)) return 0; else return 1;
-											};
+		if (s.length() == t.length() + 1 && s.charAt(s.length() - 1) == '/') s = s.substring(0,s.length() - 1);
+		else if (t.length() == s.length() + 1 && t.charAt(t.length() - 1) == '/') t = t.substring(0,t.length() - 1);
+		if (s.equalsIgnoreCase(t)) return 0; else return 1;
+	};*/
 	
 	/*
 	 * Database just a text file, first line Priority and URL, followed by links to work
@@ -166,12 +170,19 @@ public class WebCrawler {
 
 		currentDatabase = database;
 		
-		if (addToTemporaryDatabase(url, 1)) linksAdded++;
+		int slashCount = 0;
+		String urlString = url.toString();
+		for (int i=0; i<urlString.length(); i++) if (urlString.charAt(i) == '/') slashCount++;
+		
+		try {
+			if (addToTemporaryDatabase( (slashCount== 2 ? new URL(urlString + '/') : url), 1)) linksAdded++;
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		}
 		
 		try {
 			workNextURL();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -206,7 +217,7 @@ public class WebCrawler {
 	
 	private void setPriorityToZero(URL url)
 	{
-		String s1 = url.toString();
+		//String s1 = url.toString();
 		String newOutput="";
 		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
 		{
@@ -219,8 +230,8 @@ public class WebCrawler {
 				else if (line.charAt(0)=='P') newOutput += line;//TODO: can make this more flexible by no longer relying on P being the first character
 				else if (!matched && Character.isDigit(line.charAt(0)))
 				{
-					String s2 = getURLFromString(line).url.toString();
-					if (urlMatch.compare(s1, s2) == 0)
+					//String s2 = getURLFromString(line).url.toString();
+					if (urlMatch.compare(url, getURLFromString(line).url) == 0)
 					{
 						matched = true;
 						newOutput += "\n0\t\"" + url.toString() + "\"";
@@ -304,7 +315,7 @@ public class WebCrawler {
 	
 	private boolean tempURLAlreadyExist(URL url)
 	{
-		String s1 = url.toString();
+		//String s1 = url.toString();
 		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
 		{
 			String line;
@@ -312,8 +323,8 @@ public class WebCrawler {
 			{
 				if (Character.isDigit(line.charAt(0)))
 				{
-					String s2 = getURLFromString(line).url.toString();
-					if (urlMatch.compare(s1, s2) == 0) return true;
+					//String s2 = getURLFromString(line).url.toString();
+					if (urlMatch.compare(url, getURLFromString(line).url) == 0) return true;
 				}
 			}
 		} catch (IOException e) {
@@ -545,10 +556,7 @@ public class WebCrawler {
 		
 		stringWithoutParameters = input.substring(0,position); //removing hash as this is a local reference, and ? and ; as this is for parameters to pass to the other address
 		
-		System.out.println("String Without Parameters is: " + stringWithoutParameters);
-		System.out.println("Base URL is: " + baseURL);
-		
-		if (stringWithoutParameters.length() == 0) linkString = baseURL;
+		if (stringWithoutParameters.length() == 0) linkString = currentURL.toString(); //This shouldnt be base but current site when empty
 		else if (stringWithoutParameters.contains(":")) linkString = stringWithoutParameters; //String is full reference as includes protocol
 		else if (stringWithoutParameters.length() > 1 && stringWithoutParameters.substring(0,2).equals("./"))
 		{
@@ -596,15 +604,16 @@ public class WebCrawler {
 			String basePart = baseURL.substring(0, basePosition);
 
 			String linkPart = (stringWithoutParameters.length() < (numToRemove * 3) ? "" : stringWithoutParameters.substring(numToRemove * 3));
-			System.out.println("LinkPart is: " + linkPart);
 			linkString = basePart + linkPart;//specifies at stadards that too many ../ then possible shoudl be added in adress 
 			
 		}
 		else linkString = baseURL + stringWithoutParameters;
 		
-
+		int slashCount = 0;
+		for (int i=0; i<linkString.length(); i++) if (linkString.charAt(i) == '/') slashCount++;
+		
 		try {
-			return new URL (linkString);
+			return new URL ((slashCount == 2 ? linkString + '/' : linkString));
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -616,9 +625,7 @@ public class WebCrawler {
 	
 	private void moveToNextElement(char ch) throws IOException
 	{
-		System.out.println((char) n);
 		while (n != -1 && (char) n != '=' && (char) n != '\'' && (char) n != '"' && !Character.isWhitespace((char) n) && (char) n != ch )  n=currentStream.read();
-		System.out.println((char) n);
 		if (Character.isWhitespace((char) n)) n = HTMLread.skipSpace(currentStream, '>'); // move on from space to next word
 
 		if ((char) n == '=' || (char) n == '"' || (char) n == '\'') //if have an equals, ' or "" then need to proceed past the next entry
@@ -631,7 +638,6 @@ public class WebCrawler {
 				else n = Character.MIN_VALUE;
 			}
 		}
-		System.out.println((char) n);
 	}
 	
 	/*
