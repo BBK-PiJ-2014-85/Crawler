@@ -194,7 +194,7 @@ public class TestWebCrawler {
 	
 	//URLs and File for checking duplicates
 	
-	static URL simpleDup,simpleDupSameBase, simpleDupNotCS, dupDomainSlash, dupNotIncreaseCount, dup1, dup2, dupEndSlashNotDomainNotSame, dupParse1, dupParsed;
+	static URL simpleDup,simpleDupSameBase, simpleDupNotCS, dupDomainSlash, dupNotIncreaseCount, dup1, dup2, dupEndSlashNotDomainNotSame, dupParse1, dupParsed,simpleDupCSPath;
 	static File fileSimpleDup = new File("simpleDup");
 	static File fileSimpleDupNotCS = new File("simpleDupNotCS");
 	static File fileDupDomainSlash = new File("dupDomainSlash");
@@ -202,8 +202,8 @@ public class TestWebCrawler {
 	static File fileDupEndSlahNotDomainNotSame = new File("dupEndSlahNotDomainNotSame");
 	static File fileDupParse = new File("dupParse");
 	static File fileSimpleDupSameBase = new File("simpleDupSameBase");
+	static File fileSimpleDupCSPath = new File("simpleDupCSPath");
 
-	
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 
@@ -328,18 +328,18 @@ public class TestWebCrawler {
 		addPage(p13 = new URL("http://a/b/c/p13"),fileP13,"<a href=;x>");
 		addPage(p14 = new URL("http://a/b/c/p14"),fileP14,"<a href=g;x>");
 		addPage(p15 = new URL("http://a/b/c/p15"),fileP15,"<a href=g;x?y#s>");
-		addPage(p16 = new URL("http://a/b/c/p16"),fileP16,"<a href=.");
-		addPage(p17 = new URL("http://a/b/c/p17"),fileP17,"<a href=./");
-		addPage(p18 = new URL("http://a/b/c/p18"),fileP18,"<a href=..");
-		addPage(p19 = new URL("http://a/b/c/p19"),fileP19,"<a href=../");
-		addPage(p20 = new URL("http://a/b/c/p20"),fileP20,"<a href=../g");
-		addPage(p21 = new URL("http://a/b/c/p21"),fileP21,"<a href=../..");
-		addPage(p22 = new URL("http://a/b/c/p22"),fileP22,"<a href=../../");
-		addPage(p23 = new URL("http://a/b/c/p23"),fileP23,"<a href=../../g");
+		addPage(p16 = new URL("http://a/b/c/p16"),fileP16,"<a href=.>");
+		addPage(p17 = new URL("http://a/b/c/p17"),fileP17,"<a href=./>");
+		addPage(p18 = new URL("http://a/b/c/p18"),fileP18,"<a href=..>");
+		addPage(p19 = new URL("http://a/b/c/p19"),fileP19,"<a href=../>");
+		addPage(p20 = new URL("http://a/b/c/p20"),fileP20,"<a href=../g>");
+		addPage(p21 = new URL("http://a/b/c/p21"),fileP21,"<a href=../..>");
+		addPage(p22 = new URL("http://a/b/c/p22"),fileP22,"<a href=../../>");
+		addPage(p23 = new URL("http://a/b/c/p23"),fileP23,"<a href=../../g>");
 		testPages.put(p1a = new URL("http://a/b/c/g"),fileSimpleLinkFound);
 		testPages.put(p3a = new URL("http://a/b/c/g/"),fileSimpleLinkFound);
 		testPages.put(p4a = new URL("http://a/g"),fileSimpleLinkFound);
-		testPages.put(p5a = new URL("http://g"),fileSimpleLinkFound);
+		testPages.put(p5a = new URL("http://g/"),fileSimpleLinkFound);
 		testPages.put(p16a = new URL("http://a/b/c/"),fileSimpleLinkFound);
 		testPages.put(p18a = new URL("http://a/b/"),fileSimpleLinkFound);
 		testPages.put(p20a = new URL("http://a/b/g"),fileSimpleLinkFound);
@@ -380,8 +380,9 @@ public class TestWebCrawler {
 			addPage(dupEndSlashNotDomainNotSame= new URL("http://dupSlashNotEndNotSame.com/"),fileDupEndSlahNotDomainNotSame,"<a href=http://duplicate.com/dup/></a><a href=http://duplicate.com/dup>");
 			testPages.put(dupParse1 = new URL("http://dupParse.com/dup/first/second"),fileSimpleLinkFound);
 			addPage(dupParsed= new URL("http://dupParse.com/dup/first/word"),fileDupParse,"<a href=http://dupParse.com/dup/first/second></a><a href=second></a>");
-		
-		
+			addPage(simpleDupCSPath= new URL("http://simpleDupCSPath.com/"),fileSimpleDupCSPath,"<a href=http://duplicate.com/dup/></a><a href=http://duplicate.com/duP/>");
+			testPages.put(new URL("http://duplicate.com/duP/"),fileSimpleLinkFound);
+
 		
 		//TODO: End of files 
 	
@@ -535,11 +536,18 @@ public class TestWebCrawler {
 		assertEquals(1,getMatchedURLs(file).size());
 	}
 	@Test
-	public void testDuplicatesNotCaseSensitive()
+	public void testDuplicatesNotCaseSensitiveDomain()
 	{
 		wc.crawl(simpleDupNotCS, file);
 		assertEquals(2,HTMLStream.getSearchedURLs().size());
 		assertEquals(2,getMatchedURLs(file).size());
+	}
+	@Test
+	public void testDuplicatesCaseSensitivePath()
+	{
+		wc.crawl(simpleDupCSPath, file);
+		assertEquals(3,HTMLStream.getSearchedURLs().size());
+		assertEquals(3,getMatchedURLs(file).size());
 	}
 	@Test
 	public void testSlashPutOnEndOfDomainAndDuplicateDetected()
@@ -561,7 +569,7 @@ public class TestWebCrawler {
 	{
 		wc.crawl(dupEndSlashNotDomainNotSame, file);
 		assertEquals(3,HTMLStream.getSearchedURLs().size());
-		assertEquals(3,getMatchedURLs(file));
+		assertEquals(3,getMatchedURLs(file).size());
 	}
 	@Test
 	public void testDuplicateDetectedOnParsedLink()
