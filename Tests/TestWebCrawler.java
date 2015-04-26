@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import Impls.WebCrawler;
 import Impls.HTMLStream;
-import Impls.SearchCriteria;
+import Interfaces.SearchCriteria;
 
 /*
  * This class provides the tests for the Webcrawler implementation of WebCrawler interface.
