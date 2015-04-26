@@ -30,6 +30,34 @@ import Impls.WebCrawler;
 import Impls.HTMLStream;
 import Impls.SearchCriteria;
 
+/*
+ * This class provides the tests for the Webcrawler implementation of WebCrawler interface.
+ * 
+ * That testing was done by creating many different files with different conditions and uploading these to HTMLStream static class
+ * to store these as webpages to test the webcrawler on. A lot of files are created for this purpose, created in the same location as the
+ * test file, but are deleted after the test program has run. Due to the amount of files being created, this test class can take a while to run (c.20 seconds on a 3 year old Macbook air).
+ * 
+ * Due to the files being created, to avoid conflict the file containing the test class should be clean from files outside of those included within this
+ * webcrawler package.
+ * 
+ * The test should be intuitively named enough for them to be clear what they are testing. They are split up into the following categories:
+ * 
+ * 		-FUNCTIONALITY: Tests the general functionality, including that it is breadth first, it provides an appropriate error if the crawl file already exists,
+ * 			the search function is overwritten and applied properly using both constructors and that the default settings for max links and depth are working as specified
+ * 		-DUPLICATES: Tests that links aren't searched twice if they are repeated, they are case sensitive or not as intended, they dont count for the max link limit
+ * 			and that parsed links are properly detected as duplicate.
+ * 		-OUTPUT: Tests that the output database is as intended, only storing those which match criteria.
+ * 		-TAG FINDING: Tests that the a and base tags are found and that other are ignored.
+ * 		-PROTOCOL: Tests that only http are searched but that all are found.
+ * 		-HREF FINDING: Determines that the href is properly found and other forms are correctly ignored.
+ * 		-HREF LINKS: Checks the links following an href are read in correctly and exceptional circumstances are dealt with
+ * 		-ABSOLUTE AND RELATIVE PATH PARSING: Checks links are parsed properly and that exceptional cases are dealt with.
+ * 		-SEARCH LIMITS: Ensures the constructor settings for max links and max depth are applied correctly, and appropriate errors returned should the user input be invalid
+ * 		-MALFORMED AND NOT FOUND URLS: Checks the functionality is as intended when a Malformed URL exists or http connection is unable to be made
+ * 
+ * Tests begin from row 530.
+ */
+
 public class TestWebCrawler {
 
 	WebCrawler wc;
@@ -432,22 +460,17 @@ public class TestWebCrawler {
 			testPages.put(new URL("http://linkNotFound.com/"),null);
 			testResponses.put(new URL("http://linkNotFound.com/"),HttpURLConnection.HTTP_NOT_FOUND);
 			addPage(secondLinkNotFound = new URL("http://secondLinkNotFound.com/"),fileSecondLinkNotFound,"<a href=http://linkNotFound.com/></a><a href=http://simpleLinkFound.com>");
-
-			
-		//TODO: End of files 
-	
 	}
 	
-
-	
+	/*
+	 * Adds a page to the test area for the HTMLStream
+	 */
 	private static void addPage(URL pageName, File pageFile, String pageContent) throws IOException
 	{
 		setBody(pageFile,pageContent);
 		testPages.put(pageName, pageFile);
 		testResponses.put(pageName, HttpURLConnection.HTTP_ACCEPTED);
 	}
-	
-	
 	
 	private static void setBody(File file, String body) throws IOException
 	{
@@ -456,6 +479,9 @@ public class TestWebCrawler {
 		fw.close();
 	}
 	
+	/*
+	 * Provides a list of the results the webcrawler output into the file
+	 */
 	private static List<URL> getMatchedURLs(File file)
 	{
 		List<URL> rtn = new ArrayList<URL>();		
@@ -482,9 +508,9 @@ public class TestWebCrawler {
 		return rtn;
 	}
 	
-	
-	
-	
+	/*
+	 * Cleans the stream, removes the database, and creates a fresh webcrawler before each test.
+	 */
 	@Before 
 	public void cleanStart() throws MalformedURLException
 	{
@@ -502,7 +528,9 @@ public class TestWebCrawler {
 		if (file.exists()) file.delete();
 	}
 	
-	// TODO: TEST FUNCTIONALITY
+	//*************TESTS BEGIN HERE*******************//
+	
+	// TEST FUNCTIONALITY
 	
 	@Test
 	public void testBreadthFirst()
@@ -558,7 +586,7 @@ public class TestWebCrawler {
 		assertEquals(5,HTMLStream.getSearchedURLs().size());
 	}
 
-	//TODO: DUPLICATES
+	// TEST DUPLICATES
 	
 	@Test
 	public void testDuplicatesNotSearchedTwice()
@@ -619,7 +647,7 @@ public class TestWebCrawler {
 	}
 
 	
-	//TODO: STORING OF RESULTS
+	// TEST STORING OF RESULTS
 	
 	//Testing that only those matched by search have been added has been added within the change to the default search function
 	
@@ -638,7 +666,7 @@ public class TestWebCrawler {
 		assertEquals(13,getMatchedURLs(file).size() );
 	}
 	
-	// DETERMINE TAG READ IN PROPERLY
+	// TEST TAG READ IN PROPERLY
 	
 	@Test
 	public void testTagFoundLittleA() {
@@ -837,7 +865,7 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(baseAfterEmptyBaseIgnored));
 	}
 	
-	// TODO: TEST PROTOCOL
+	// TEST PROTOCOL
 	
 	@Test
 	public void testNonHttpNotSearched()
@@ -867,7 +895,7 @@ public class TestWebCrawler {
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
 	}
 	
-	// TODO: DETERMINE HREF READ IN PROPERLY
+	// TEST HREF READ IN PROPERLY
 	
 	@Test
 	public void testHrefOutsideTagNotReadIn()
@@ -996,7 +1024,7 @@ public class TestWebCrawler {
 		assertTrue(HTMLStream.getSearchedURLs().contains(simpleLinkFound));
 	}
 
-	//TODO: HREF LINK FUNCTIONALITY
+	// TEST HREF LINK READ
 	
 	@Test
 	public void testLinkAddedIfEOFEndNoTagWhenQuotes()
@@ -1083,7 +1111,7 @@ public class TestWebCrawler {
 		assertEquals(1,HTMLStream.getSearchedURLs().size());
 	}
 	
-	//TODO: TEST FORMING OF ABSOLUTE AND RELATIVE PATHS
+	// TEST FORMING OF ABSOLUTE PATHS AND PARSING RELATIVE PATHS
 	
 	@Test 	// 		g = <URL:http://a/b/c/g>
 	public void testParse1()
@@ -1245,7 +1273,7 @@ public class TestWebCrawler {
        }
 
 	
-	// TODO: TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
+	// TEST DEPTH AND LINK MAX SEARCH LIMITS WORK
 
 	@Test(expected=IllegalArgumentException.class) 
 	public void testMaxDepth0MaxFiles0error()
@@ -1358,9 +1386,8 @@ public class TestWebCrawler {
 		assertTrue(!HTMLStream.getSearchedURLs().contains(linkA2));
 	}
 	
-	//TODO: ERROR DISPLAYED WHEN URL INVALID
+	// TEST ERROR DISPLAYED WHEN URL INVALID
 	
-
 	@Test
 	public void testURLMalfunctionNotAddedToMatchAndContinues()
 	{
@@ -1391,7 +1418,6 @@ public class TestWebCrawler {
 			System.setOut(null);
 	}
 		
-	//TODO: End of tests
 	
 	@AfterClass //use this to delete files after test has run to avoid cluttering the program folder
 	public static void deleteFiles()
@@ -1503,9 +1529,4 @@ fileSimpleDupCSPath.delete();
 fileURLMalfunction.delete();
 fileSecondLinkNotFound.delete();
 	}
-	
-	
-	
-
-
 }
