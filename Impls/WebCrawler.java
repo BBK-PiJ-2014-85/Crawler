@@ -1,6 +1,7 @@
 package Impls;
 
 import Interfaces.WebCrawlerInterface;
+import Interfaces.SearchCriteria;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,12 +16,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileSystemAlreadyExistsException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-
 
 /**
  * This class implements the WebCrawlerInterface which will crawl a website defined by the user following all links until a limit is reached. The following
@@ -32,34 +30,36 @@ import java.util.Set;
  * 		<li>No HTML validation: This crawler does not validate that the HTML code is valid. It searches for an open tag of either a or base. Once found, it will find the first href link and return it. It is sufficient for a link to be added if the href quotations marks close, or, if no quotation marks used, it doesnt go directly into an
  * 			end of file. It therefore doesn't matter if the tag is closed. A base tag is read in if it occurs before any other base tag or a tag.
  * 		<li>Protocols: The crawler only follows links using the http: protocol. However, all links are stored and are recorded and will be provided in output regardless of protocol specified (unless specified otherwise by the user) 
- * 		<li>URL Exceptions: Should the URL not exist it will not be searched but is still eligible for the match criteria. A URL malfunction will not be added nor eligible. Both are included in any max link limit set by the user.
+ * 		<li>URL Exceptions: Should the URL not exist it will not be searched but is still eligible for the match criteria. A URL malfunction will not be searched nor eligible. Details of this occuring are output to the console, and therefore can be kept if required. Both are included in any max link limit set by the user.
  * 		<li>HTML Standards: Obey HTML as outlined by the worldwide web consortium (http://www.w3.org/TR/html-markup/syntax.html#syntax-elements)
  * 		<li>Output: When crawled one table will be output, containing those finally matched. All temporary output is deleted once complete. The output is a simple text file.
  * 		<li>Duplicates: Duplicates are determined by using Java URL sameFile() to determine whether links were duplicate (once resolved), so host is not deemed case sensitive but the path is.
  * 		<li>Dependencies: Outside of standard libraries, the crawler is dependent on StreamHolder, HTMLread, HTMLStream and StoredTempUrl classes, as well as the SearchCriteria interface.
  * 		<li>Pathnames: If a URL is provided, either by the user on while crawling, consisting of only a host and protocol component, a backslash will be added at the end if there isn't one already. This ensures duplicates of this nature match.
  * 		<li>Fragments: In forming a link, fragments, defined by the symbols ?, :, ; and # are ignored as if everything after these symbols. These reference the same page or provide query information, and have therefore been ignored.
-			Printing to log for malformed and link not found. If wanted, send console out to screen. Others, including host not found, error. Not done in interests of time, given steer.
+ * 		<li>Host not exist: If the host of a link does not exist, a host not exist error will be printed.
  * </ul>
- *  
- *  
+ *   
  * @author Paul Day
- *
  */
 
 /*
- * 		-Why search criteria chosen
- * 		-Why two tables
- * 		-didnt realise URL functionality until too late
- * 		-why http?
+ *  Notes for the programmer:
  * 
- * Improvements: 
- * 		- host not exist exception
- * 		- mutlithreaded
- * 		- manage exceptions better than ignoring which is bad practice
- * 		
- * 		
- * 
+ * 		-SEARCH CRITERIA: This was chosen to use Lambdas as it is very easy for the user to make multiple different search types on the fly, without having to change or implement classes. It makes it very easy for the user to specify what search to be made
+ * 			at the point of webcrawler creation
+ * 		-OUTPUT: For simplicity given there are little requirements of the output a text file was used rather than any database management system. All the temporary work is done in the same file and then deleted (as its called temporary). It would
+ * 			have been simpler to use two 2 different tables, but the spec implied one should be used and the user had not defined where the temporary table should be stored, potentially causing conflict.
+ * 		-JAVA URL FUNCTIONALITY: The code doesn't use URL functionality such as getProtocol() as much as it could do, which would make it simpler. I didn't realise this until late on, where I tried to start using this, and given guidance to limit
+ * 			time spent working on this I decided to leave it rather than rework it.
+ * 		-HTTP ONLY: It was decided to only search http sites, as other protocols may not be using html and scanning these with a web crawler is unlikely polite. However, a set is defined below "OPENABLE" which contains the protocols which will be searched,
+ * 			to make it easy to add other protocols to be searched if required. Corresponding changes would need to be made to the HTMLStream class to open a connection with the other protocol.
+ * 		-URL EXCEPTIONS: As it not specified whether malformed URL or connection not made exceptions should be printed to a file, a detail on these are printed to the console where the user can catch and store these if required.
+ * 		-HOST NOT FOUND: Host not founds return the error for the page and continue. It would probably have been better to not print the exception but a message instead and handle them cleaner, but guidance was to limit time spent on this and thefore as this
+ * 			would have required quite a bit of work to change and test to several classes it was left as out of scope.
+ * 		-MULTITHREADED: Multithreading was not done due to time and the spec not suggesting this should be done. However, this would be simple to code by having a crawl run a separate thread with a different class containing everything that follows from crawl.
+ * 			Testing this, however, would take a lot longer and therefore this was deemed out of scope.
+ *   
  */
 
 
@@ -80,12 +80,7 @@ public class WebCrawler implements WebCrawlerInterface {
 	int n;
 	String domainURL;
 	String baseURL;
-	boolean firstLinkFromPageFound;
-
-	/* Comparator below defines whether two URLs are deemed duplicate for matches. This is defined as not case sensitive, and if one ends in a forwards slash
-		and the other doesn't, but otherwise they are the same, these are determined to be the same*/
-	Comparator<URL> urlMatch = (URL s, URL t) -> { return (s.sameFile(t) ? 0 : 1); }; //TODO: This is a little over the top now if i stick with this.
-										
+	boolean firstLinkFromPageFound;								
 
 	/**
 	 * This creates a webcrawler using the default parameter. All links match, the maximum depth is set to 5 and the maximum links found is 20.
@@ -147,7 +142,6 @@ public class WebCrawler implements WebCrawlerInterface {
 		matchCondition = match;
 	}
 	
-	
 	@Override
 	public void crawl(URL url, File database)
 	{	
@@ -165,8 +159,9 @@ public class WebCrawler implements WebCrawlerInterface {
 		String urlString = url.toString();
 		for (int i=0; i<urlString.length(); i++) if (urlString.charAt(i) == '/') slashCount++;
 		
+		//If only two slashes then it is host only not ending with a backslash, so add another to end
 		try {
-			if (addToTemporaryDatabase( (slashCount== 2 ? new URL(urlString + '/') : url), 1)) linksAdded++;
+			addToTemporaryDatabase( (slashCount== 2 ? new URL(urlString + '/') : url), 1);
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
@@ -181,9 +176,7 @@ public class WebCrawler implements WebCrawlerInterface {
 
 	}
 	
-	
-	//returns true if added and therefore unique, false if not
-	private boolean addToTemporaryDatabase(URL url, int depth)
+	private void addToTemporaryDatabase(URL url, int depth)
 	{
 		String tempDatabase = getAllTemporaryURLs();
 		
@@ -193,14 +186,16 @@ public class WebCrawler implements WebCrawlerInterface {
 		
 		try (PrintWriter out = new PrintWriter(currentDatabase)){
 			out.write(tempDatabase);
+			linksAdded++;
 			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		return true;
 	}
 	
+	/*
+	 * Sets the priority to zero for a link which has just been worked.
+	 */
 	private void setPriorityToZero(URL url)
 	{
 		String newOutput="";
@@ -215,7 +210,7 @@ public class WebCrawler implements WebCrawlerInterface {
 				else if (line.charAt(0)=='P') newOutput += line;
 				else if (!matched && Character.isDigit(line.charAt(0)))
 				{
-					if (urlMatch.compare(url, getURLFromString(line).url) == 0)
+					if (url.sameFile(getURLFromString(line).url))
 					{
 						matched = true;
 						newOutput += "\n0\t\"" + url.toString() + "\"";
@@ -236,6 +231,9 @@ public class WebCrawler implements WebCrawlerInterface {
 		} 
 	}
 	
+	/*
+	 * Returns a string of all temporary URLs as they appear in the file.
+	 */
 	private String getAllTemporaryURLs()
 	{
 		String returnString="PRIORITY \tURL";
@@ -253,6 +251,9 @@ public class WebCrawler implements WebCrawlerInterface {
 		return returnString;
 	}
 	
+	/*
+	 * Returns the string of all matched URLs as they appear in the file
+	 */
 	private String getAllMatchedURLs()
 	{
 		String returnString="MATCHED";
@@ -294,6 +295,9 @@ public class WebCrawler implements WebCrawlerInterface {
 		return null;
 	}
 	
+	/*
+	 * Returns true if the URL already exists in the temporary database, false otherwise
+	 */
 	private boolean tempURLAlreadyExist(URL url)
 	{
 		try (BufferedReader in = new BufferedReader(new FileReader(currentDatabase))) 
@@ -303,7 +307,7 @@ public class WebCrawler implements WebCrawlerInterface {
 			{
 				if (Character.isDigit(line.charAt(0)))
 				{
-					if (urlMatch.compare(url, getURLFromString(line).url) == 0) return true;
+					if (url.sameFile(getURLFromString(line).url)) return true;
 				}
 			}
 		} catch (IOException e) {
@@ -313,6 +317,9 @@ public class WebCrawler implements WebCrawlerInterface {
 		return false;
 	}
 	
+	/*
+	 * Returns a URL and priority from a line in the temporary database.
+	 */
 	private StoredTempURL getURLFromString(String line)
 	{
 		int numPosn = 0;
@@ -331,6 +338,9 @@ public class WebCrawler implements WebCrawlerInterface {
 		return null;
 	}
 	
+	/*
+	 * A recursive method which gets the next URL to work and crawls it for links, and then runs itself again crawling for the next page 
+	 */
 	private void workNextURL() throws IOException
 	{
 		StoredTempURL next = getNextUnworkedURL();
@@ -366,7 +376,7 @@ public class WebCrawler implements WebCrawlerInterface {
 
 						if (!tempURLAlreadyExist(urlToAdd))
 						{
-							if (addToTemporaryDatabase(urlToAdd, currentDepth + 1)) linksAdded++;
+							addToTemporaryDatabase(urlToAdd, currentDepth + 1);
 						}
 					}
 				}
@@ -408,23 +418,22 @@ public class WebCrawler implements WebCrawlerInterface {
 
 	}
 	
-	//return null if there are no urls left
+	/*
+	 * Goes through the current stream and returns the next link found, or null if there aren't any
+	 */
 	public URL getNextURLFromCurrentStream() throws IOException
 	{
-//		URL nextURL=null;
-		/*URL*/ baseURL = trimURLToLastSlash(currentURL).toString();
-//		boolean firstTagFound = false; //once an a or base tag has been found, then a base tag can no longer exist (one is in the head, the other, the body)
-		while(HTMLread.readUntil(currentStream, '<', '<')) //TODO: not sure what this should stop on, it already returns false at end of file
-		{
 
+		baseURL = trimURLToLastSlash(currentURL).toString();
+
+		while(HTMLread.readUntil(currentStream, '<', '<'))
+		{
 				n = currentStream.read();
 				if (n==-1) break;
-//				char c = (char) n;
 				boolean tagIsBase = false;
 				boolean tagIsA = false;
-//				String link="";
 				
-				if (!firstLinkFromPageFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag, and must be beofer an A tag
+				if (!firstLinkFromPageFound && Character.toLowerCase((char) n) == 'b') //there can only be one base tag, and must be before an A tag
 				{
 					if (matchStringAndMoveN(false,"ase"))
 					{
@@ -440,8 +449,6 @@ public class WebCrawler implements WebCrawlerInterface {
 					n = HTMLread.skipSpace(currentStream,'>');
 				}
 			
-				
-				
 				if (tagIsA || tagIsBase)
 				{
 					boolean noLinkContained=false;
@@ -450,11 +457,10 @@ public class WebCrawler implements WebCrawlerInterface {
 					if (!firstLinkFromPageFound) firstLinkFromPageFound = true;
 				
 					
-					while (n != -1 && (char) n != Character.MIN_VALUE && (char) n != '>' && !noLinkContained && !baseTagAdded) //should parameterise the >
+					while (n != -1 && (char) n != Character.MIN_VALUE && (char) n != '>' && !noLinkContained && !baseTagAdded)
 					{
 						if ((char) n == 'h')
 						{
-
 							if (matchStringAndMoveN(true,"ref"))
 							{
 								n = currentStream.read();
@@ -465,13 +471,11 @@ public class WebCrawler implements WebCrawlerInterface {
 									else if (tagIsA) return returnURL;
 									else {
 										baseURL = trimURLToLastSlash(returnURL).toString();
-										baseTagAdded=true;
-										
+										baseTagAdded=true;	
 									}
 								}
 							}
 						}
-					//}
 						
 					if (n != -1 && (char) n != Character.MIN_VALUE & !baseTagAdded) moveToNextElement('>');
 					}
@@ -502,17 +506,19 @@ public class WebCrawler implements WebCrawlerInterface {
 	/*
 	 * This method obtains the value for the current attribute and compiles it into a URL.
 	 * 
-	 * The point in the stream will either be at the "=" or whitespace, before the value but after the element name.
+	 * Standards written to: http://tools.ietf.org/html/rfc1808#section-5
+	 * 
+	 * The point in the stream at the start will either be at the "=" or whitespace, before the value but after the element name.
 	 * 
 	 * If the current point is whitespace, it will move to the next non whitespace which should be = (if not then null is returned).
 	 * 
 	 * From the point of equals, it moves forwards to the next no whitespace, where it will encounter an ", ' or character.
 	 * 
-	 * The URL returned is null if the input parameter is met, am end of file is met, or an '=' is not met 
+	 * The URL returned is null if the input parameter is met, an end of file is met, or an '=' is not met 
 	 */
 	private URL convertStringToURL(String input)
 	{
-		// Standards written to: http://tools.ietf.org/html/rfc1808#section-5
+
 		String linkString="";
 		
 		String stringWithoutParameters ="";
@@ -527,7 +533,7 @@ public class WebCrawler implements WebCrawlerInterface {
 		
 		stringWithoutParameters = input.substring(0,position); //removing hash as this is a local reference, and ? and ; as this is for parameters to pass to the other address
 		
-		if (stringWithoutParameters.length() == 0) linkString = currentURL.toString(); //This shouldnt be base but current site when empty
+		if (stringWithoutParameters.length() == 0) linkString = currentURL.toString(); 
 		else if (stringWithoutParameters.contains(":")) linkString = stringWithoutParameters; //String is full reference as includes protocol
 		else if (stringWithoutParameters.length() > 1 && stringWithoutParameters.substring(0,2).equals("./"))
 		{
@@ -575,7 +581,7 @@ public class WebCrawler implements WebCrawlerInterface {
 			String basePart = baseURL.substring(0, basePosition);
 
 			String linkPart = (stringWithoutParameters.length() < (numToRemove * 3) ? "" : stringWithoutParameters.substring(numToRemove * 3));
-			linkString = basePart + linkPart;//specifies at stadards that too many ../ then possible shoudl be added in adress 
+			linkString = basePart + linkPart; 
 			
 		}
 		else linkString = baseURL + stringWithoutParameters;
@@ -635,7 +641,7 @@ public class WebCrawler implements WebCrawlerInterface {
 		return matched;
 	}
 
-	public boolean search(URL url)
+	private boolean search(URL url)
 	{
 		return matchCondition.match(url);
 	}
@@ -675,36 +681,4 @@ public class WebCrawler implements WebCrawlerInterface {
 		
 		return rtn;
 	}
-	
-	
-	
-	
-	
-	// Temporarily seeing how the InputStreamReader works for reading in HTML from websites  
-    public static void main(String[] args) throws IOException {
-    	
-    	
-    	
-        URL test = new URL("http://www.bbc.co.uk");
-        URL test3 = new URL("http://www.dcs.bbk.ac.uk/%7Emartin/sewn/ls3/testpage.html");
-        URL test2 = new URL("http://www.bbc.co.uk/dfdfdfdfd");
-        /*
-        
-        BufferedReader in = new BufferedReader(
-        new InputStreamReader(test3.openStream()));  
-        String inputLine;
-        while ((inputLine = in.readLine()) != null)
-            System.out.println(inputLine);
-        in.close();
-    	*/
-        
-        File file = new File("database.txt");
-        if (file.exists()) file.delete();
-        
-        WebCrawler wc = new WebCrawler((url) -> url.toString().substring(0,5).equals("http:"),5,5);
-        wc.crawl(test2,file);
-        
-        
-    }
-	
 }
