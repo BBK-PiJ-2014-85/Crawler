@@ -1,6 +1,5 @@
 package Impls;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -16,11 +15,10 @@ public class HTMLread {
 	/**
 	 * Consumes the stream until a character provided as a parameter is encountered. This is not case sensitive.
 	 * 
-	 * Returns true of the first provided parameter is encountered and false if it is the second.
+	 * Returns true if the first provided parameter is encountered and false if it is the second. If end of file is encountered
+	 * false shall be returned.
 	 * 
-	 * TODO: Determine if the character itself is consumed as well (should become clear later). Assumed yes for now.
-	 * TODO: What to return if an end file is found at the end? Currently return false when find -1 (eof)
-	 * TODO: What id paramters the same? Currently return ch1 
+	 *  If the input parameters are the same, true is returned if it is encountered.
 	 * 
 	 * @param stream the input stream
 	 * @param ch1 the first character to match
@@ -48,10 +46,6 @@ public class HTMLread {
 	 * Consumes an input stream until a non whitespace character is consumed. If this character is not the same as the input character,
 	 * the character is returned, else the lowest character value is provided.
 	 * 
-	 * TODO: What to do if the end of file is found? Currently return lowest as well. May not be most practical.
-	 * TODO: What if the char is actually whitespace? Currently it still returns lowest.
-	 * TODO: Case sensitive? Assumed that it is. 
-	 * 
 	 * @param stream the input stream
 	 * @param ch the character which returns will lowest character value
 	 * @return the non whitespace character encountered or the lowest character value should it match the input parameter
@@ -77,7 +71,7 @@ public class HTMLread {
 	 * encountered, a String containing the characters read is returned. Otherwise the null string is returned.The parameter found
 	 * is not returned at the end of the String.
 	 * 
-	 * TODO: What is eof? Return null currently.
+	 * If end of file is encountered the null string is returned.
 	 * 
 	 * @param stream the input stream
 	 * @param c1 the character that, once encountered, returns the String of chars up to this point, including the last parameter
@@ -106,11 +100,12 @@ public class HTMLread {
 	/**
 	 * Consumes the input stream building a string of all values until either whitespace or the input parameter is found.
 	 * 
-	 * If whitespace is encountered first, the string of chars up to but not including the whitespace is returned.
+	 * The final parameter is not returned.
 	 * 
+	 * Returns null if the end of file was encountered before the parameters.
 	 * 
 	 * @param stream the input stream
-	 * @param ch the character which stops the stream being consumed and returns the null stream
+	 * @param ch the character which stops the stream being consumed
 	 * @return the String of all chars encountered until the whitespace or parameter was encountered
 	 */
 	
@@ -129,39 +124,6 @@ public class HTMLread {
 		}
 		
 		return null;
-	}
-	
-	public static void main(String[] args) throws IOException
-	{
-		//Proper tests will be written later once scopes fully understood. Below experiments to make sure id the right approach for my needs
-		
-		String testEoF = "o";
-		InputStream in4 = new ByteArrayInputStream(testEoF.getBytes());
-		System.out.println(in4.read());
-		System.out.println(in4.read());
-		System.out.println(in4.read());
-		
-		String test = "This is a string to test.";
-		InputStream in = new ByteArrayInputStream(test.getBytes());
-		System.out.println("Should be true: " + HTMLread.readUntil(in,'H','i'));
-		System.out.println("Should be false: " + HTMLread.readUntil(in,'H','i'));
-		System.out.println("Should be s: " + (char)in.read());
-		System.out.println("Should be false: " + HTMLread.readUntil(in,'z','p'));
-		
-		String test2 = "  A        b             c";
-		InputStream in2 = new ByteArrayInputStream(test2.getBytes());
-		System.out.println("Should be null: " + HTMLread.skipSpace(in2, 'A'));
-		System.out.println("Should be b: " + HTMLread.skipSpace(in2, 'A'));
-		System.out.println("Should be c: " + HTMLread.skipSpace(in2, 'A'));
-		System.out.println("Should be null: " + HTMLread.skipSpace(in2, 'A'));
-		
-		String test3 = "This isa nothing";
-		InputStream in3 = new ByteArrayInputStream(test3.getBytes());
-		System.out.println("Should be This: " + HTMLread.readString(in3, ' ','a'));
-		System.out.println("Should be is: " + HTMLread.readString(in3, 'a','b'));
-		System.out.println("Should be null: " + HTMLread.readString(in3, 'w',' '));
-		System.out.println("Should be null: " + HTMLread.readString(in3, 'x','y'));
-		
 	}
 	
 }
