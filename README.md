@@ -25,5 +25,5 @@ The following interfaces are required, stored within the Interfaces folder:
     
 The test files can be found in the folder Tests.
     
-    
+JavaDoc can be found within the doc folder.
 
