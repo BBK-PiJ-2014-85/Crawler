@@ -32,14 +32,16 @@ import java.util.Set;
  * 		<li>No HTML validation: This crawler does not validate that the HTML code is valid. It searches for an open tag of either a or base. Once found, it will find the first href link and return it. It is sufficient for a link to be added if the href quotations marks close, or, if no quotation marks used, it doesnt go directly into an
  * 			end of file. It therefore doesn't matter if the tag is closed. A base tag is read in if it occurs before any other base tag or a tag.
  * 		<li>Protocols: The crawler only follows links using the http: protocol. However, all links are stored and are recorded and will be provided in output regardless of protocol specified (unless specified otherwise by the user) 
- * 		<li>URL Exceptions: Should the URL not exist it will not be searched but is still eligible for the match criteria. A URL malfunction will not be added nor eligible. Both print output to the console to report these have occured, and both are included in any max link limit set by the user.
+ * 		<li>URL Exceptions: Should the URL not exist it will not be searched but is still eligible for the match criteria. A URL malfunction will not be added nor eligible. Both are included in any max link limit set by the user.
  * 		<li>HTML Standards: Obey HTML as outlined by the worldwide web consortium (http://www.w3.org/TR/html-markup/syntax.html#syntax-elements)
  * 		<li>Output: When crawled one table will be output, containing those finally matched. All temporary output is deleted once complete. The output is a simple text file.
  * 		<li>Duplicates: Duplicates are determined by using Java URL sameFile() to determine whether links were duplicate (once resolved), so host is not deemed case sensitive but the path is.
  * 		<li>Dependencies: Outside of standard libraries, the crawler is dependent on StreamHolder, HTMLread, HTMLStream and StoredTempUrl classes, as well as the SearchCriteria interface.
  * 		<li>Pathnames: If a URL is provided, either by the user on while crawling, consisting of only a host and protocol component, a backslash will be added at the end if there isn't one already. This ensures duplicates of this nature match.
  * 		<li>Fragments: In forming a link, fragments, defined by the symbols ?, :, ; and # are ignored as if everything after these symbols. These reference the same page or provide query information, and have therefore been ignored.
+			Printing to log for malformed and link not found. If wanted, send console out to screen. Others, including host not found, error. Not done in interests of time, given steer.
  * </ul>
+ *  
  *  
  * @author Paul Day
  *
@@ -54,6 +56,7 @@ import java.util.Set;
  * Improvements: 
  * 		- host not exist exception
  * 		- mutlithreaded
+ * 		- manage exceptions better than ignoring which is bad practice
  * 		
  * 		
  * 
@@ -183,8 +186,6 @@ public class WebCrawler implements WebCrawlerInterface {
 	private boolean addToTemporaryDatabase(URL url, int depth)
 	{
 		String tempDatabase = getAllTemporaryURLs();
-
-		System.out.println("Adding to temporary database: " + url.toString());
 		
 		tempDatabase += "\n" + depth + "\t\"" + url.toString() + "\"\n\n";
 
@@ -194,8 +195,6 @@ public class WebCrawler implements WebCrawlerInterface {
 			out.write(tempDatabase);
 			
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
@@ -343,8 +342,6 @@ public class WebCrawler implements WebCrawlerInterface {
 
 			URL urlToAdd;
 		
-			System.out.println("Working: " + currentURL.toString() );
-		
 			Iterator<String> it = OPENABLE.iterator();
 			boolean canOpen = false;
 			while (it.hasNext() && !canOpen) { if (it.next().equalsIgnoreCase(currentURL.getProtocol())) canOpen = true;}
@@ -358,7 +355,7 @@ public class WebCrawler implements WebCrawlerInterface {
 				
 				if (nextStream.response != HttpURLConnection.HTTP_ACCEPTED)
 				{
-					System.out.println("Not right...");
+					System.out.println("Unsuccessful connection to " + currentURL.toString() + ": " + nextStream.response);
 				}
 				else
 				{
@@ -399,8 +396,6 @@ public class WebCrawler implements WebCrawlerInterface {
 	
 	private void addURLToMatchedDatabase(URL url)
 	{
-
-		System.out.println("Adding to matched database: " + url.toString());
 		
 		try (PrintWriter out = new PrintWriter(new FileWriter(currentDatabase,true))){
 			out.write("\n\"" + url.toString() + "\"");
@@ -591,7 +586,7 @@ public class WebCrawler implements WebCrawlerInterface {
 		try {
 			return new URL ((slashCount == 2 ? linkString + '/' : linkString));
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			System.out.println("Malformed URL found: " + (slashCount == 2 ? linkString + '/' : linkString));
 		}
 		
 		return null;
