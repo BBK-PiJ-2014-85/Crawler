@@ -8,7 +8,7 @@ import java.net.URL;
  * 
  * There is only one public method, which is crawl(). The user provides this with a URL to crawl and the crawler provides a file specified by the user
  * containing all the links obtained by crawling the pages. This interface does not include a search method, as instead this is definable by the user within
- * the constructors by use of setting a Lamba.
+ * the constructors by use of setting a Lambda.
  * 
  * @author Paul Day
  */
