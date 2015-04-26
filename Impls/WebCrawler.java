@@ -421,7 +421,7 @@ public class WebCrawler implements WebCrawlerInterface {
 	/*
 	 * Goes through the current stream and returns the next link found, or null if there aren't any
 	 */
-	public URL getNextURLFromCurrentStream() throws IOException
+	private URL getNextURLFromCurrentStream() throws IOException
 	{
 
 		baseURL = trimURLToLastSlash(currentURL).toString();
