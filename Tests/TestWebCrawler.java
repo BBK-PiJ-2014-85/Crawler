@@ -1,18 +1,14 @@
 package Tests;
 
-
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -216,15 +212,18 @@ public class TestWebCrawler {
 	
 	static Map<URL,File> testPages = new HashMap<URL,File>();
 	static Map<URL, Integer> testResponses = new HashMap<URL,Integer>();
-	private final static ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 
-
+	//URLs and File for checking URL errors
+	
+	static URL urlMalfunction, secondLinkNotFound;
+	static File fileURLMalfunction = new File("URLMalfunction");
+	static File fileSecondLinkNotFound = new File("secondLinkNotFound");
+	
 
 	
 	@BeforeClass
 	public static void setUp() throws IOException
 	{
-		System.setOut(new PrintStream(outContent));
 		
 		addPage(simpleLinkFound = new URL("http://simpleLinkFound.com/"),fileSimpleLinkFound,"Link was followed");
 		testPages.put(simpleBaseLinkFound = new URL("http://baseLink.com/found"), fileSimpleLinkFound);
@@ -427,6 +426,13 @@ public class TestWebCrawler {
 			testPages.put(new URL("http://duplicate.com/duP/"),fileSimpleLinkFound);
 			testResponses.put(new URL("http://duplicate.com/duP/"),HttpURLConnection.HTTP_ACCEPTED);
 		
+		//Files for URL errors tested
+			addPage(urlMalfunction = new URL("http://urlMalfunction.com/"),fileURLMalfunction,"<a href=p:/malfunction></a><a href=http://simpleLinkFound.com>");
+			testPages.put(new URL("http://linkNotFound.com/"),null);
+			testResponses.put(new URL("http://linkNotFound.com/"),HttpURLConnection.HTTP_NOT_FOUND);
+			addPage(secondLinkNotFound = new URL("http://secondLinkNotFound.com/"),fileSecondLinkNotFound,"<a href=http://linkNotFound.com/></a><a href=http://simpleLinkFound.com>");
+
+			
 		//TODO: End of files 
 	
 	}
@@ -510,24 +516,6 @@ public class TestWebCrawler {
 	{
 		file.createNewFile();
 		wc.crawl(simpleLinkFound, file);
-	}
-	
-	@Test
-	public void testNonExistantURLPrintedToConsole() //TODO: Test all of the statuses which can be set. HTMLStream will return a packet containing error instead of a stream
-	{
-		fail();
-	}
-	
-	@Test
-	public void testNonExistantURLFirstURLNoError() //TODO: Same as aboce
-	{
-		fail();
-	}
-	
-	@Test
-	public void testMalformedURLErrorPrinted()
-	{
-		fail();
 	}
 	
 	@Test //Dont need to test default setting of this as covered elsewhere
@@ -1371,20 +1359,33 @@ public class TestWebCrawler {
 	
 
 	@Test
-	public void testURLMalfunctionReportedInLogAndContinues()
+	public void testURLMalfunctionNotAddedToMatchAndContinues()
 	{
-		addPage(urlMalfunction = new URL("http://urlMalfunction.com/"),fileURLMalfunction,"<a href=p:/malfunction></a><a http://simpleLinkFound.com>");
+		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+		  System.setOut(new PrintStream(outContent));
 		wc.crawl(urlMalfunction, file);
-		assertEquals("Malformed URL: p:/malfunction.", outContent.toString());
-		assertEquals(2,getMatchedURLs(file));
+		assertEquals(2,getMatchedURLs(file).size());
+		assertEquals("Malformed URL found: p:/malfunction\n", outContent.toString());
+		  System.setOut(null);
 	}
 	@Test
-	public void testURLErrorContinuesAndAddedToFile()
+	public void testURLErrorAddedToMatchAndContinues()
 	{
-
-		wc.crawl(urlMalfunction, file);
-		assertEquals("Malformed URL: p:/malfunction.", outContent.toString());
-		assertEquals(3,getMatchedURLs(file));
+		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(outContent));
+		wc.crawl(secondLinkNotFound, file);
+		assertEquals(3,getMatchedURLs(file).size());
+		assertEquals("Unsuccessful connection to http://linkNotFound.com/: 404\n", outContent.toString());
+		System.setOut(null);
+	}
+	@Test
+	public void testURLErrorFirstAddedToMatch() throws MalformedURLException
+	{		ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+			System.setOut(new PrintStream(outContent));
+			wc.crawl(new URL("http://linkNotFound.com/"), file);
+			assertEquals(1,getMatchedURLs(file).size());
+			assertEquals("Unsuccessful connection to http://linkNotFound.com/: 404\n", outContent.toString());
+			System.setOut(null);
 	}
 		
 	//TODO: End of tests
