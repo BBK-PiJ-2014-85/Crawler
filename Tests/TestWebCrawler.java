@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -437,11 +438,7 @@ public class TestWebCrawler {
 	
 	}
 	
-	@AfterClass //use this to delete files after test has run to avoid cluttering the program folder
-	public static void deleteFiles()
-	{
 
-	}
 	
 	private static void addPage(URL pageName, File pageFile, String pageContent) throws IOException
 	{
@@ -497,6 +494,12 @@ public class TestWebCrawler {
 		if (file.exists()) file.delete();
 	
 		wc = new WebCrawler(); 
+	}
+	
+	@After
+	public void removeFile()
+	{
+		if (file.exists()) file.delete();
 	}
 	
 	// TODO: TEST FUNCTIONALITY
@@ -1390,6 +1393,116 @@ public class TestWebCrawler {
 		
 	//TODO: End of tests
 	
+	@AfterClass //use this to delete files after test has run to avoid cluttering the program folder
+	public static void deleteFiles()
+	{
+
+		fileSimpleLinkFound.delete();
+		fileLittleA.delete();
+		fileBigA.delete();
+		fileMultipleSpaceA.delete();
+		fileTabA.delete();
+		fileMultipleTabA.delete();
+fileLinebreakA.delete();
+fileMultipleLinebreakA.delete();
+fileWhitespaceMixA.delete();
+filetagAh.delete();
+fileTagSpaceBeforeA.delete();
+fileWithinTag.delete();
+fileMultipleTags.delete();
+fileTagSpaceBeforeAll.delete();
+fileTagEOF.delete();
+fileTagEOFOnceRead.delete();
+fileWithinElement.delete();
+fileAfterTag.delete();
+fileBaseLower.delete();
+fileBaseUpper.delete();
+fileBaseMixedCase.delete();
+fileTagBasef.delete();
+fileTagBas.delete();
+fileTagEOFBas.delete();
+fileBaseAfterTagA.delete();
+fileBaseAfterBase.delete();
+fileBaseAfterEmptyBase.delete();
+fileThreeLinks.delete();
+fileThreeLinksA.delete(); 
+fileThreeLinksB.delete();
+fileThreeLinksC.delete();
+fileFTPLink.delete();
+fileHrefOutsideTag.delete();
+fileHrefAfterTag.delete();
+fileHrefInBody.delete();
+fileHrefInWrongTag.delete();
+fileHrefUpperCase.delete();
+fileHrefLowerCase.delete();
+fileHrefAfterNullElement.delete();
+fileHrefAfterEqualsElement.delete();
+fileHrefAfterDoubleElement.delete();
+fileHrefAfterSingleElement.delete();
+fileHrefNoErrorEOFDuring.delete();
+fileHrefNoErrorEOFAfterEnd.delete();
+fileHrefNoErrorEOFAfterEquals.delete();
+fileHreffNotIncluded.delete();
+fileHreNotIncluded.delete();
+fileHrefWSInPreviousDouble.delete();
+fileHrefWSInPreviousSingle.delete();
+fileHrefEndPreviousNotReadIn.delete();
+fileHrefTwoInSameElement.delete();	
+fileLinkWithEOFBeforeClosedWithTagWhenQuotes.delete();
+fileLinkEOFBeforeCloseQuote.delete();
+fileLinkTagBeforeCloseQuote.delete();
+fileLinkWithWordAfter.delete();
+fileLinkEOFBeforeClosedTag.delete();
+fileLinkWhitespaceThenWord.delete();
+fileLinkWhitespaceThenSingleQuotes.delete();
+fileLinkWhitespaceThenDoubleQuotes.delete();
+fileLinkWordCloseTagAfter.delete();
+fileLinkQuoteCloseTagAfter.delete();
+fileLinkWordAfterNullHref.delete();
+fileLinkWordAfterEmptyHref.delete();
+fileLinkEmpty.delete();
+fileLinkNull.delete();
+fileP1.delete();
+fileP2.delete();
+fileP3.delete();
+fileP4.delete();
+fileP5.delete();
+fileP6.delete();
+fileP7.delete();
+fileP8.delete();
+fileP9.delete();
+fileP10.delete();
+fileP11.delete();
+fileP12.delete();
+fileP13.delete();
+fileP14.delete();
+fileP15.delete();
+fileP16.delete();
+fileP17.delete();
+fileP18.delete();
+fileP19.delete();
+fileP20.delete();
+fileP21.delete();
+fileP22.delete();
+fileP23.delete();
+fileDefaultMaxFile.delete();
+fileD1.delete();
+fileD2.delete();
+fileD3.delete();
+fileD4.delete();
+fileD5.delete();
+fileD6.delete();
+fileSimpleDup.delete();
+fileSimpleDupNotCS.delete();
+fileDupDomainSlash.delete();
+fileDupNotIncreaseCount.delete();
+fileDupEndSlahNotDomainNotSame.delete();
+fileDupParse.delete();
+fileSimpleDupSameBase.delete();
+fileSimpleDupCSPath.delete();
+fileURLMalfunction.delete();
+fileSecondLinkNotFound.delete();
+	}
 	
 	
 	
