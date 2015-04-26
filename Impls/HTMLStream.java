@@ -28,6 +28,7 @@ public class HTMLStream {
  * Sets the map of URL and corresponding return pages.
  * 
  * @param testPages the map containing each test URL and the corresponding page to return if it is searched
+ * @param testResponses the map containing each test URL and the corresponding connection status
  */
 	
 	public static void addTestURLs(Map<URL,File> testPages, Map<URL,Integer> testResponses) 
@@ -42,7 +43,7 @@ public class HTMLStream {
 	 * 
 	 * @param url the url of which to open the stream of
 	 * @return the stream of the URL, and the stream of the string page should a testing map have been added
-	 * @throws IOException
+	 * @throws IOException should there be an IO exception with the stream
 	 */
 	
 	public static StreamHolder getStream(URL url) throws IOException
